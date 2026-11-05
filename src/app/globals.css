@@ -1,26 +1,1387 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* dark: utilities follow the .dark class toggled by the Sol/Luna switch (not the OS preference) */
+@custom-variant dark (&:where(.dark, .dark *));
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  :root,
+  html.dark,
+  [data-theme="dark"] {
+    --theme: dark;
+    color-scheme: dark;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Radio único para tarjetas, modales y contenedores */
+    --radius-card: 16px;
+
+    /* Acento de marca por modo: Amarillo en Noche (Rojo en Día) */
+    --accent-warm: #fcbf48;
+    --accent-warm-2: #f67f00;
+    --on-accent: #003049;
+
+    /* Base Backgrounds (Formato Noche: Tonos Cálidos Oscuros) */
+    --bg-base: #141211; /* Carbón obsidiana cálido / espresso */
+    --bg-sidebar: rgba(22, 19, 18, 0.75);
+    --bg-surface: rgba(34, 28, 25, 0.65);
+    --bg-surface-elevated: rgba(48, 39, 34, 0.78);
+    --bg-input: rgba(22, 18, 16, 0.75);
+
+    /* Bordes y Reflejos Cálidos */
+    --border-subtle: rgba(252, 191, 72, 0.12);
+    --border-card: rgba(252, 191, 72, 0.18);
+    --border-card-hover: rgba(252, 191, 72, 0.35);
+
+    /* Tipografía y Neutros */
+    --text-primary: #FFFFFF;
+    --text-secondary: #C8BEB7;
+    --text-muted: #8E837C;
+
+    /* Glassmorphism Cards (Tonos Cálidos Oscuros) */
+    --glass-card-bg: linear-gradient(
+      135deg,
+      rgba(255, 235, 215, 0.08) 0%,
+      rgba(36, 29, 25, 0.62) 50%,
+      rgba(20, 16, 15, 0.85) 100%
+    );
+    --glass-card-border: rgba(252, 191, 72, 0.18);
+    --glass-card-border-hover: rgba(252, 191, 72, 0.38);
+    --glass-card-shadow: 
+      0 16px 36px -10px rgba(0, 0, 0, 0.65),
+      inset 0 1px 1px 0 rgba(255, 235, 205, 0.22);
+    --glass-card-shadow-hover: 
+      0 20px 42px -10px rgba(0, 0, 0, 0.75),
+      inset 0 1.5px 1.5px 0 rgba(252, 191, 72, 0.45);
+
+    /* Neumorfismo Negro Cálido (Capa 3: Workout Player) */
+    --neu-bg: #1a1715;
+    --neu-shadow-dark: #0c0a09;
+    --neu-shadow-light: #2a2522;
+    --neu-border: rgba(252, 191, 72, 0.06);
+
+    /* Liquid Glass Noche (Vidrio Ahumado Cálido con Bisel Ámbar) */
+    --glass-bg: linear-gradient(
+      135deg,
+      rgba(255, 235, 210, 0.14) 0%,
+      rgba(255, 235, 210, 0.04) 35%,
+      rgba(26, 21, 18, 0.82) 100%
+    );
+    --glass-dock-bg: linear-gradient(
+      180deg,
+      rgba(255, 235, 210, 0.15) 0%,
+      rgba(22, 18, 16, 0.88) 100%
+    );
+    --glass-pill-bg: linear-gradient(
+      135deg,
+      rgba(255, 235, 210, 0.14) 0%,
+      rgba(255, 235, 210, 0.04) 50%,
+      rgba(26, 21, 18, 0.70) 100%
+    );
+    --glass-border: rgba(252, 191, 72, 0.25);
+    --glass-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.8);
+    --glass-specular: rgba(255, 235, 210, 0.45);
+    --glass-inner-shadow: rgba(0, 0, 0, 0.55);
+    --glass-tint: rgba(38, 30, 26, 0.38);
+    --glass-sheen: rgba(255, 236, 210, 0.16);
+    --glass-streak: rgba(255, 236, 210, 0.10);
+    --glass-rim: rgba(255, 220, 170, 0.10);
+
+    /* Superficie de Lectura de Alto Contraste (Regla de Marca: Idéntica) */
+    --surface-reading: #ebe2b7;
+    --surface-reading-text: #003049;
+
+    /* Acentos Primarios */
+    --accent-primary: #003049;
+    --accent-critical: #d62725;
+
+    /* Acentos Secundarios (Visualización de Datos) */
+    --accent-data-orange: #f67f00;
+    --accent-data-yellow: #fcbf48;
+  }
+
+  html.light,
+  [data-theme="light"] {
+    --theme: light;
+    color-scheme: light;
+
+    /* Acento de marca Día: todo lo amarillo del modo noche pasa a Rojo #d62725 */
+    --accent-warm: #d62725;
+    --accent-warm-2: #b51f1f;
+    --on-accent: #ffffff;
+
+    /* Base Backgrounds (Formato Día: Blanco puro) */
+    --bg-base: #ffffff;
+    --bg-sidebar: rgba(255, 255, 255, 0.78);
+    --bg-surface: rgba(255, 255, 255, 0.68);
+    --bg-surface-elevated: rgba(245, 247, 250, 0.88);
+    --bg-input: rgba(255, 255, 255, 0.85);
+
+    /* Bordes y Reflejos Sobrios */
+    --border-subtle: rgba(0, 48, 73, 0.08);
+    --border-card: rgba(255, 255, 255, 0.85);
+    --border-card-hover: rgba(255, 255, 255, 1);
+
+    /* Tipografía y Neutros: #003049 para cabeceras y textos principales */
+    --text-primary: #003049;
+    --text-secondary: #475569;
+    --text-muted: #64748B;
+
+    /* Glassmorphism Cards (Blancos Tenues Sobrios) */
+    --glass-card-bg: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.82) 0%,
+      rgba(255, 255, 255, 0.52) 55%,
+      rgba(244, 246, 250, 0.70) 100%
+    );
+    --glass-card-border: rgba(0, 48, 73, 0.12);
+    --glass-card-border-hover: rgba(255, 255, 255, 1);
+    --glass-card-shadow: 
+      0 12px 30px -8px rgba(0, 48, 73, 0.07),
+      inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.95),
+      inset 0 -1px 1px 0 rgba(0, 48, 73, 0.03);
+    --glass-card-shadow-hover: 
+      0 18px 36px -8px rgba(0, 48, 73, 0.12),
+      inset 0 2px 2px 0 rgba(255, 255, 255, 1);
+
+    /* Neumorfismo Blanco Porcelana Sobrio (Capa 3: Workout Player) */
+    --neu-bg: #EEF1F6;
+    --neu-shadow-dark: #D2D7E2;
+    --neu-shadow-light: #FFFFFF;
+    --neu-border: rgba(0, 48, 73, 0.04);
+
+    /* Liquid Glass Día (Vidrio Blanco Satinado / Frosted Glass Sobrio) */
+    --glass-bg: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.90) 0%,
+      rgba(255, 255, 255, 0.72) 45%,
+      rgba(240, 244, 250, 0.85) 100%
+    );
+    --glass-dock-bg: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(245, 247, 250, 0.90) 100%
+    );
+    --glass-pill-bg: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.94) 0%,
+      rgba(255, 255, 255, 0.80) 100%
+    );
+    --glass-border: rgba(0, 48, 73, 0.14);
+    --glass-shadow: 0 20px 45px -10px rgba(0, 48, 73, 0.10);
+    --glass-specular: rgba(255, 255, 255, 1.0);
+    --glass-inner-shadow: rgba(0, 48, 73, 0.10);
+    --glass-tint: rgba(255, 255, 255, 0.42);
+    --glass-sheen: rgba(255, 255, 255, 0.85);
+    --glass-streak: rgba(255, 255, 255, 0.55);
+    --glass-rim: rgba(255, 255, 255, 0.55);
+
+    /* Superficie de Lectura de Alto Contraste (Regla de Marca: Idéntica) */
+    --surface-reading: #ebe2b7;
+    --surface-reading-text: #003049;
+
+    /* Acentos Primarios */
+    --accent-primary: #003049;
+    --accent-critical: #d62725;
+
+    /* Acentos Secundarios (Visualización de Datos) */
+    --accent-data-orange: #f67f00;
+    --accent-data-yellow: #d62725;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Tipografía Geométrica Sans Serif del Sistema */
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-geometric), "Plus Jakarta Sans", "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    letter-spacing: -0.015em;
+    overflow-x: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Formato Noche: Base sólida cálida oscura detrás del fondo animado translúcido */
+  [data-theme="dark"] body {
+    background-color: #0e0d0c;
+    background-image: none;
+  }
+
+  /* Formato Día: Base clara detrás del fondo animado translúcido */
+  [data-theme="light"] body {
+    background-color: #f8f9fb;
+    background-image: none;
+  }
+
+  /* Tipografías Geométricas para Cabeceras */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-geometric), "Plus Jakarta Sans", "Outfit", sans-serif;
+    letter-spacing: -0.025em;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Custom utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ========================================================= */
+/* GLASSMORPHISM EN EL DISEÑO DE LA INTERFAZ                  */
+/* Tarjetas, paneles y contenedores con refracción y brillo */
+/* ========================================================= */
+.glass-card,
+.flat-card {
+  background: var(--glass-card-bg) !important;
+  backdrop-filter: blur(20px) saturate(175%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(175%) !important;
+  border: 1px solid var(--glass-card-border) !important;
+  box-shadow: var(--glass-card-shadow) !important;
+  border-radius: var(--radius-card);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-hover:hover,
+.flat-card-hover:hover {
+  border-color: var(--glass-card-border-hover) !important;
+  box-shadow: var(--glass-card-shadow-hover) !important;
+}
+
+/* Superficie de Lectura Beige de Alto Contraste (WCAG 2.1 AA > 8.5:1) */
+.flat-card-reading {
+  background: rgba(235, 226, 183, 0.95) !important;
+  backdrop-filter: blur(16px) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(160%) !important;
+  color: var(--surface-reading-text) !important;
+  border: 1px solid #ded4a3 !important;
+  box-shadow: 
+    0 12px 28px -6px rgba(0, 48, 73, 0.14),
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Radio estándar único para tarjetas, modales y contenedores */
+.glass-card,
+.flat-card,
+.flat-card-reading,
+.liquid-glass-sheet,
+.neu-container {
+  border-radius: var(--radius-card) !important;
+}
+
+/* Botones accionables: forma de píldora (radio máximo) */
+button:not(.lg-menu-item) {
+  border-radius: 9999px !important;
+}
+
+
+/* ========================================================= */
+/* CAPA 2: LIQUID GLASS / GLASSMORPHISM (Modales, Sheets & Dock) */
+/* Realismo óptico: refracción, reflejo especular, borde 1px */
+/* ========================================================= */
+/* Cristal real: poco blur (se distingue lo que hay detrás), tinte ligero,
+   brillo especular superior, reflejo diagonal y borde de luz interior. */
+.liquid-glass-sheet {
+  background:
+    linear-gradient(180deg, var(--glass-sheen) 0%, transparent 38%),
+    linear-gradient(115deg, transparent 0%, var(--glass-streak) 22%, transparent 34%),
+    var(--glass-tint);
+  backdrop-filter: blur(22px) saturate(190%) brightness(1.04);
+  -webkit-backdrop-filter: blur(22px) saturate(190%) brightness(1.04);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    var(--glass-shadow),
+    inset 0 1.75px 0.75px 0 var(--glass-specular),
+    inset 0 0 0 1px var(--glass-rim),
+    inset 0 -14px 28px -18px var(--glass-inner-shadow),
+    inset 0 18px 30px -22px var(--glass-specular);
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.liquid-glass-dock {
+  background:
+    linear-gradient(180deg, var(--glass-sheen) 0%, transparent 60%),
+    var(--glass-tint);
+  backdrop-filter: blur(20px) saturate(190%) brightness(1.05);
+  -webkit-backdrop-filter: blur(20px) saturate(190%) brightness(1.05);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    var(--glass-shadow),
+    inset 0 1.75px 0.75px 0 var(--glass-specular),
+    inset 0 0 0 1px var(--glass-rim),
+    inset 0 -8px 16px -10px var(--glass-inner-shadow);
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.liquid-glass-pill {
+  background:
+    linear-gradient(160deg, var(--glass-sheen) 0%, transparent 70%),
+    var(--glass-tint);
+  backdrop-filter: blur(18px) saturate(190%) brightness(1.06);
+  -webkit-backdrop-filter: blur(18px) saturate(190%) brightness(1.06);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    0 10px 24px -6px rgba(0, 0, 0, 0.22),
+    inset 0 1.75px 0.75px 0 var(--glass-specular),
+    inset 0 0 0 1px var(--glass-rim);
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+/* ========================================================= */
+/* CÍRCULO BASE FLOTANTE DEL FAB "+" (Domo Esférico bevelMode: 1) */
+/* ========================================================= */
+#fab-quick-capture,
+.fab-floating-solid {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 3.5rem !important; /* 56px */
+  height: 3.5rem !important; /* 56px */
+  min-width: 3.5rem !important;
+  min-height: 3.5rem !important;
+  border-radius: 9999px !important; /* Círculo base 100% perfecto */
+  z-index: 30 !important;
+  overflow: visible !important;
+  cursor: pointer !important;
+  /* Valores base por defecto (Noche: Azul Marino #003049 con bisel Domo ámbar) */
+  background: linear-gradient(145deg, rgba(16, 86, 128, 0.94) 0%, rgba(0, 48, 73, 0.98) 60%, rgba(0, 26, 42, 1) 100%) !important;
+  border: 1.5px solid rgba(252, 191, 72, 0.55) !important;
+  color: #fcbf48 !important;
+  box-shadow:
+    0 16px 32px -4px rgba(0, 0, 0, 0.85),
+    0 8px 16px -2px rgba(0, 0, 0, 0.65),
+    0 0 18px -2px rgba(252, 191, 72, 0.30),
+    inset 0 3px 4px 0 rgba(255, 255, 255, 0.38),
+    inset 0 -6px 12px -4px rgba(0, 0, 0, 0.45) !important;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease !important;
+}
+
+/* Modo Día (Light): Domo de Cristal Esmerilado con borde especular e icono de acento */
+html.light #fab-quick-capture,
+[data-theme="light"] #fab-quick-capture,
+html.light .fab-floating-solid,
+[data-theme="light"] .fab-floating-solid {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.96) 0%, rgba(238, 242, 248, 0.88) 60%, rgba(226, 232, 242, 0.94) 100%) !important;
+  backdrop-filter: blur(18px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(190%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.95) !important;
+  box-shadow:
+    0 16px 30px -4px rgba(0, 48, 73, 0.26),
+    0 6px 14px -2px rgba(0, 48, 73, 0.14),
+    inset 0 3px 4px 0 #ffffff,
+    inset 0 -4px 10px -4px rgba(0, 48, 73, 0.14) !important;
+  color: var(--accent-warm) !important;
+}
+
+/* Modo Noche (Dark): Domo Azul Marino Refractivo #003049 con bisel ámbar e icono #fcbf48 */
+html.dark #fab-quick-capture,
+[data-theme="dark"] #fab-quick-capture,
+html.dark .fab-floating-solid,
+[data-theme="dark"] .fab-floating-solid {
+  background: linear-gradient(145deg, rgba(16, 86, 128, 0.94) 0%, rgba(0, 48, 73, 0.98) 60%, rgba(0, 26, 42, 1) 100%) !important;
+  backdrop-filter: blur(18px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(190%) !important;
+  border: 1.5px solid rgba(252, 191, 72, 0.55) !important;
+  box-shadow:
+    0 16px 32px -4px rgba(0, 0, 0, 0.88),
+    0 8px 16px -2px rgba(0, 0, 0, 0.65),
+    0 0 18px -2px rgba(252, 191, 72, 0.30),
+    inset 0 3px 4px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -6px 12px -4px rgba(0, 0, 0, 0.45) !important;
+  color: #fcbf48 !important;
+}
+
+/* Desactivar lens specular de glass */
+#fab-quick-capture::after,
+.fab-floating-solid::after {
+  display: none !important;
+}
+
+/* Microinteracciones de flotación física */
+#fab-quick-capture:hover,
+.fab-floating-solid:hover {
+  transform: translateY(-2px) !important;
+}
+
+#fab-quick-capture:active,
+.fab-floating-solid:active {
+  transform: translateY(1px) scale(0.94) !important;
+}
+
+/* ========================================================= */
+/* CAPA 3: NEUMORPHISM (EXCLUSIVO Workout Player Controles Físicos) */
+/* Sensación táctil extruida e indentada sobre base cálida/sobria */
+/* ========================================================= */
+.neu-container {
+  background-color: var(--neu-bg);
+  transition: background-color 0.25s ease;
+}
+
+.neu-raised {
+  background: var(--neu-bg);
+  box-shadow: 6px 6px 14px var(--neu-shadow-dark), -6px -6px 14px var(--neu-shadow-light);
+  border: 1px solid var(--neu-border);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neu-raised:active,
+.neu-pressed {
+  background: var(--neu-bg);
+  box-shadow: inset 4px 4px 8px var(--neu-shadow-dark), inset -4px -4px 8px var(--neu-shadow-light);
+  border: 1px solid var(--neu-border);
+}
+
+.neu-circle-raised {
+  border-radius: 9999px;
+  background: var(--neu-bg);
+  box-shadow: 8px 8px 18px var(--neu-shadow-dark), -8px -8px 18px var(--neu-shadow-light);
+  transition: all 0.2s ease;
+}
+
+.neu-circle-inset {
+  border-radius: 9999px;
+  background: var(--neu-bg);
+  box-shadow: inset 6px 6px 12px var(--neu-shadow-dark), inset -6px -6px 12px var(--neu-shadow-light);
+  transition: all 0.2s ease;
+}
+
+.neu-bubble {
+  border-radius: 1rem;
+  background: var(--neu-bg);
+  box-shadow: 4px 4px 10px var(--neu-shadow-dark), -4px -4px 10px var(--neu-shadow-light);
+  border: 1px solid var(--neu-border);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neu-bubble:active,
+.neu-bubble-active {
+  background: var(--neu-bg);
+  box-shadow: inset 3px 3px 7px var(--neu-shadow-dark), inset -3px -3px 7px var(--neu-shadow-light);
+}
+
+/* Campo neumórfico sutil (Login / Vinculación) */
+.neu-input {
+  background-color: var(--neu-bg) !important;
+  border: 1px solid var(--neu-border) !important;
+  color: var(--text-primary) !important;
+  box-shadow: inset 3px 3px 7px var(--neu-shadow-dark), inset -3px -3px 7px var(--neu-shadow-light) !important;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.neu-input:focus {
+  border-color: rgba(214, 39, 40, 0.45) !important;
+}
+
+html.dark .neu-input:focus,
+[data-theme="dark"] .neu-input:focus {
+  border-color: rgba(252, 191, 72, 0.55) !important;
+}
+
+/* ========================================================= */
+/* AJUSTES ADAPTATIVOS PARA MODO CLARO (Blancos Tenues Sobrios) */
+/* ========================================================= */
+[data-theme="light"] h1:not([class*="text-[#003049]"]):not([class*="text-[#ebe2b7]"]):not([class*="text-[#fcbf48]"]):not([class*="text-[#d62725]"]):not([class*="text-emerald"]):not([class*="text-amber"]):not([class*="text-red"]),
+[data-theme="light"] h2:not([class*="text-[#003049]"]):not([class*="text-[#ebe2b7]"]):not([class*="text-[#fcbf48]"]):not([class*="text-[#d62725]"]):not([class*="text-emerald"]):not([class*="text-amber"]):not([class*="text-red"]),
+[data-theme="light"] h3:not([class*="text-[#003049]"]):not([class*="text-[#ebe2b7]"]):not([class*="text-[#fcbf48]"]):not([class*="text-[#d62725]"]):not([class*="text-emerald"]):not([class*="text-amber"]):not([class*="text-red"]),
+[data-theme="light"] h4:not([class*="text-[#003049]"]):not([class*="text-[#ebe2b7]"]):not([class*="text-[#fcbf48]"]):not([class*="text-[#d62725]"]):not([class*="text-emerald"]):not([class*="text-amber"]):not([class*="text-red"]) {
+  color: #003049;
+}
+
+[data-theme="light"] input:not(.mk-title-input),
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  color: #003049 !important;
+  border-color: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 2px 8px rgba(0, 48, 73, 0.04) !important;
+}
+
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #94A3B8 !important;
+}
+
+[data-theme="dark"] input:not(.mk-title-input),
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+  background-color: rgba(24, 20, 18, 0.85) !important;
+  color: #FFFFFF !important;
+  border-color: rgba(252, 191, 72, 0.18) !important;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+  color: #8E837C !important;
+}
+
+/* Ley de Fitts: Alturas y áreas táctiles mínimas para mobile */
+.touch-target-lg {
+  min-height: 48px;
+  min-width: 48px;
+}
+
+.touch-target-xl {
+  min-height: 56px;
+  min-width: 56px;
+}
+
+/* Animaciones */
+@keyframes sheetSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-sheet-up {
+  animation: sheetSlideUp 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes scrimFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-scrim {
+  animation: scrimFade 0.25s ease-out forwards;
+}
+
+/* Animación de rotación solar suave */
+@keyframes sunSpinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-sun-spin {
+  animation: sunSpinSlow 20s linear infinite;
+}
+
+/* ========================================================= */
+/* SISTEMA VISUAL "MOCKUP" + MOTOR ÓPTICO LIQUID GLASS       */
+/* Calibrado en base a ./liquidglass/presets.ts y shaders.js */
+/* ========================================================= */
+:root,
+html.dark,
+[data-theme="dark"] {
+  /* Smoked Glass (Cristal Oscuro Ahumado de Lujo: brightness -0.35, blur 0.35, fresnel 0.45) */
+  --mk-card: linear-gradient(
+    145deg,
+    rgba(255, 240, 220, 0.14) 0%,
+    rgba(32, 26, 23, 0.56) 48%,
+    rgba(16, 13, 12, 0.68) 100%
+  );
+  --mk-border: rgba(252, 191, 72, 0.24);
+  --mk-shadow:
+    0 18px 38px -12px rgba(0, 0, 0, 0.75),
+    inset 0 1.75px 0.75px 0 rgba(255, 242, 220, 0.32),
+    inset 0 0 0 1px rgba(255, 235, 205, 0.08),
+    inset 0 14px 28px -16px rgba(255, 235, 210, 0.14);
+  --mk-field-border: rgba(252, 191, 72, 0.28);
+  --mk-muted: #a89d95;
+  --mk-track: rgba(255, 255, 255, 0.10);
+  --mk-tile: linear-gradient(145deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+  --mk-chip: linear-gradient(145deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.06) 100%);
+  --mk-ink: #ffffff;
+  --mk-accent-ink: #003049;
+
+  /* Tokens nativos de Liquid Glass (Noche / Smoked) */
+  --lg-frosted-bg: linear-gradient(
+    140deg,
+    rgba(255, 242, 225, 0.16) 0%,
+    rgba(38, 30, 26, 0.54) 48%,
+    rgba(18, 14, 13, 0.68) 100%
+  );
+  --lg-smoked-bg: linear-gradient(
+    145deg,
+    rgba(255, 238, 215, 0.12) 0%,
+    rgba(18, 15, 14, 0.66) 55%,
+    rgba(10, 8, 7, 0.78) 100%
+  );
+  --lg-clear-bg: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.18) 0%,
+    rgba(255, 255, 255, 0.04) 55%,
+    rgba(255, 240, 220, 0.10) 100%
+  );
+  --lg-rim-top: rgba(255, 244, 225, 0.44);
+  --lg-rim-inner: rgba(252, 191, 72, 0.20);
+  --lg-fresnel-glow: rgba(255, 235, 205, 0.16);
+  --lg-contact-shadow: rgba(0, 0, 0, 0.72);
+}
+
+html.light,
+[data-theme="light"] {
+  /* Frosted Glass (Cristal Esmerilado Satinado: blur 0.45, refraction 0.65, edgeHighlight 0.08) */
+  --mk-card: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.76) 0%,
+    rgba(255, 255, 255, 0.54) 52%,
+    rgba(244, 248, 255, 0.66) 100%
+  );
+  --mk-border: rgba(255, 255, 255, 0.78);
+  --mk-shadow:
+    0 14px 32px -10px rgba(0, 48, 73, 0.14),
+    0 2px 6px -1px rgba(0, 48, 73, 0.06),
+    inset 0 1.75px 0.75px 0 rgba(255, 255, 255, 1),
+    inset 0 0 0 1px rgba(0, 48, 73, 0.08);
+  --mk-field-border: rgba(0, 48, 73, 0.14);
+  --mk-muted: #5a6778;
+  --mk-track: rgba(0, 48, 73, 0.09);
+  --mk-tile: linear-gradient(145deg, rgba(255, 255, 255, 0.84) 0%, rgba(236, 242, 250, 0.56) 100%);
+  --mk-chip: linear-gradient(145deg, rgba(255, 255, 255, 0.86) 0%, rgba(235, 241, 249, 0.62) 100%);
+  --mk-ink: #003049;
+  --mk-accent-ink: var(--accent-warm);
+
+  /* Tokens nativos de Liquid Glass (Día / Frosted) */
+  --lg-frosted-bg: linear-gradient(
+    140deg,
+    rgba(255, 255, 255, 0.78) 0%,
+    rgba(255, 255, 255, 0.52) 50%,
+    rgba(242, 247, 255, 0.68) 100%
+  );
+  --lg-smoked-bg: linear-gradient(
+    145deg,
+    rgba(20, 32, 46, 0.72) 0%,
+    rgba(8, 18, 30, 0.84) 100%
+  );
+  --lg-clear-bg: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.62) 0%,
+    rgba(255, 255, 255, 0.24) 55%,
+    rgba(245, 249, 255, 0.46) 100%
+  );
+  --lg-rim-top: rgba(255, 255, 255, 1);
+  --lg-rim-inner: rgba(0, 48, 73, 0.12);
+  --lg-fresnel-glow: rgba(255, 255, 255, 0.82);
+  --lg-contact-shadow: rgba(0, 48, 73, 0.16);
+}
+
+/* Acento elegido en Ajustes → Diseño (aplica en Modo Día; en Modo Oscuro todo el acento diferencial pasa a Amarillo #fcbf48) */
+html.light[data-accent="red"], [data-theme="light"][data-accent="red"] { --accent-warm: #d62725; --accent-warm-2: #b51f1f; }
+html.light[data-accent="pink"], [data-theme="light"][data-accent="pink"] { --accent-warm: #e0458b; --accent-warm-2: #c23574; }
+html.light[data-accent="sky"], [data-theme="light"][data-accent="sky"] { --accent-warm: #2f8fdc; --accent-warm-2: #1f74b8; }
+html.light[data-accent="mint"], [data-theme="light"][data-accent="mint"] { --accent-warm: #1fa37a; --accent-warm-2: #168462; }
+html.light[data-accent="yellow"], [data-theme="light"][data-accent="yellow"] { --accent-warm: #e5a50a; --accent-warm-2: #c48a00; }
+
+html.dark,
+[data-theme="dark"],
+html.dark[data-accent],
+[data-theme="dark"][data-accent] {
+  --accent-warm: #fcbf48;
+  --accent-warm-2: #f67f00;
+  --on-accent: #003049;
+}
+
+.mk-card {
+  background: var(--mk-card);
+  backdrop-filter: blur(22px) saturate(175%);
+  -webkit-backdrop-filter: blur(22px) saturate(175%);
+  border: 1px solid var(--mk-border);
+  box-shadow: var(--mk-shadow);
+  border-radius: 16px;
+  transition:
+    transform 0.24s cubic-bezier(0.25, 1, 0.3, 1),
+    box-shadow 0.24s ease,
+    border-color 0.24s ease;
+}
+
+.mk-card-press:hover {
+  border-color: color-mix(in srgb, var(--accent-warm) 32%, var(--mk-border));
+}
+
+.mk-card-press:active {
+  transform: scale(0.982);
+}
+
+/* Tarjetas seleccionables (Bento Liquid Glass): cristal esmerilado con icono de acento;
+   al seleccionar o presionar se transforma en Cristal de Acento con bisel especular */
+html .mk-select-card {
+  background: var(--mk-card);
+  backdrop-filter: blur(22px) saturate(175%);
+  -webkit-backdrop-filter: blur(22px) saturate(175%);
+  transition:
+    background 0.25s cubic-bezier(0.25, 1, 0.3, 1),
+    border-color 0.25s ease,
+    transform 0.25s cubic-bezier(0.25, 1, 0.3, 1),
+    box-shadow 0.25s ease;
+}
+html .mk-select-card .mk-select-fg {
+  color: var(--accent-warm);
+  transition: color 0.2s ease, filter 0.2s ease;
+}
+html .mk-select-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent-warm) 35%, var(--mk-border));
+  box-shadow:
+    0 18px 36px -12px color-mix(in srgb, var(--accent-warm) 22%, rgba(0, 0, 0, 0.35)),
+    inset 0 1.5px 0.5px 0 var(--lg-rim-top);
+}
+html .mk-select-card[data-selected="true"],
+html .mk-select-card:active {
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--accent-warm) 90%, #ffffff 10%) 0%,
+    var(--accent-warm) 55%,
+    var(--accent-warm-2) 100%
+  ) !important;
+  border-color: color-mix(in srgb, var(--accent-warm) 70%, #ffffff 30%) !important;
+  box-shadow:
+    0 16px 32px -10px color-mix(in srgb, var(--accent-warm) 68%, transparent),
+    inset 0 1.5px 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -8px 18px -10px rgba(0, 0, 0, 0.28) !important;
+}
+html .mk-select-card[data-selected="true"] .mk-select-fg,
+html .mk-select-card:active .mk-select-fg {
+  color: var(--on-accent) !important;
+}
+html .mk-select-card:active {
+  transform: scale(0.975);
+}
+
+/* Barra de título de sección: "AGENDA", "SALUD", "AHORROS", "OTROS"... (Píldora de Cristal) */
+.mk-label {
+  display: block;
+  width: 100%;
+  text-align: center;
+  background: var(--mk-card);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid var(--mk-border);
+  box-shadow:
+    0 4px 12px -6px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 0 var(--lg-rim-top);
+  border-radius: 8px;
+  padding: 5px 0;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mk-muted);
+}
+
+/* Subtítulo pequeño dentro de tarjetas: "INFORMACION PERSONAL", "FECHA"... */
+.mk-caption {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mk-muted);
+}
+
+.mk-field,
+.lg-field {
+  width: 100%;
+  background: var(--lg-frosted-bg) !important;
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid var(--mk-field-border) !important;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.06),
+    inset 0 1px 0 0 var(--lg-rim-top) !important;
+  border-radius: 10px;
+  padding: 7px 10px;
+  font-size: 12px;
+  color: var(--mk-ink) !important;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+/* Campo ligero y sutil para escribir el título en la isla flotante */
+.mk-title-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.36) !important;
+  border: 1px solid var(--mk-field-border) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 48, 73, 0.04) !important;
+  border-radius: 14px;
+  padding: 9px 13px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--mk-ink) !important;
+  outline: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+html.dark .mk-title-input,
+[data-theme="dark"] .mk-title-input {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+}
+
+.mk-title-input:focus {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border-color: var(--accent-warm) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-warm) 16%, transparent) !important;
+}
+
+html.dark .mk-title-input:focus,
+[data-theme="dark"] .mk-title-input:focus {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+
+html input.mk-field:focus,
+html select.mk-field:focus,
+html textarea.mk-field:focus,
+.lg-field:focus {
+  border-color: var(--accent-warm) !important;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--accent-warm) 18%, transparent),
+    inset 0 1px 0 0 var(--lg-rim-top) !important;
+}
+
+html input.mk-field::placeholder,
+.lg-field::placeholder {
+  color: var(--mk-muted) !important;
+}
+
+/* Botones con geometría personalizada (anulan la regla global de píldora) */
+button.mk-square {
+  border-radius: 16px !important;
+}
+
+button.mk-rect {
+  border-radius: 10px !important;
+}
+
+button.lg-shape-rounded {
+  border-radius: 20px !important;
+}
+
+button.lg-shape-card {
+  border-radius: 14px !important;
+}
+
+/* Botón "+" circular de acento con física Domo Liquid Glass (bevelMode: 1) */
+.mk-fab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9999px;
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--accent-warm) 84%, #ffffff 16%) 0%,
+    var(--accent-warm) 52%,
+    var(--accent-warm-2) 100%
+  );
+  color: var(--on-accent);
+  border: 1px solid color-mix(in srgb, var(--accent-warm) 65%, #ffffff 35%);
+  box-shadow:
+    0 10px 22px -6px color-mix(in srgb, var(--accent-warm) 72%, transparent),
+    inset 0 1.75px 1px 0 rgba(255, 255, 255, 0.52),
+    inset 0 -4px 8px -4px rgba(0, 0, 0, 0.32);
+  transition:
+    transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.22s ease,
+    filter 0.22s ease;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.mk-fab:hover {
+  transform: translateY(-1.5px) scale(1.06);
+  filter: brightness(1.1);
+  box-shadow:
+    0 14px 26px -6px color-mix(in srgb, var(--accent-warm) 80%, transparent),
+    inset 0 2px 1.5px 0 rgba(255, 255, 255, 0.68),
+    inset 0 -4px 8px -4px rgba(0, 0, 0, 0.28);
+}
+
+.mk-fab:active {
+  transform: translateY(0.5px) scale(0.92);
+  box-shadow:
+    0 6px 14px -4px color-mix(in srgb, var(--accent-warm) 65%, transparent),
+    inset 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* Tile de Cristal Líquido (Icon containers estilo TriangleGlassButtons) */
+.mk-tile {
+  background: var(--mk-tile);
+  backdrop-filter: blur(14px) saturate(165%);
+  -webkit-backdrop-filter: blur(14px) saturate(165%);
+  border: 1px solid var(--mk-border);
+  box-shadow:
+    0 6px 16px -6px rgba(0, 0, 0, 0.16),
+    inset 0 1.25px 0.5px 0 var(--lg-rim-top);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease;
+}
+
+.mk-track,
+.lg-track {
+  background: var(--mk-track);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.12),
+    inset 0 -0.5px 0 rgba(255, 255, 255, 0.25);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Tarjeta Hero con Cristal de Acento Refractivo */
+.mk-hero {
+  background: linear-gradient(
+    138deg,
+    color-mix(in srgb, var(--accent-warm) 88%, #ffffff 12%) 0%,
+    var(--accent-warm) 52%,
+    var(--accent-warm-2) 100%
+  );
+  color: var(--on-accent);
+  border: 1px solid color-mix(in srgb, var(--accent-warm) 68%, #ffffff 32%);
+  border-radius: 18px;
+  box-shadow:
+    0 20px 38px -14px color-mix(in srgb, var(--accent-warm) 78%, transparent),
+    inset 0 1.75px 1px 0 rgba(255, 255, 255, 0.44),
+    inset 0 -12px 24px -14px rgba(0, 0, 0, 0.28);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ========================================================= */
+/* SISTEMA DE COMPONENTES LIQUID GLASS (.lg-*)               */
+/* Física de botones (button: true), tarjetas y píldoras     */
+/* ========================================================= */
+
+/* Base de Botón Interactivo Liquid Glass (BUTTON_GLASS_CONFIG) */
+.lg-btn {
+  backdrop-filter: blur(var(--lg-blur, 14px)) saturate(175%);
+  -webkit-backdrop-filter: blur(var(--lg-blur, 14px)) saturate(175%);
+  will-change: transform, box-shadow, filter;
+}
+
+/* Hover: brightness +0.20 y elevación física sutil */
+.lg-btn:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  filter: brightness(1.12);
+}
+
+/* Active / Press: zRadius * 0.80 (aplana el bisel) + shadowSpread * 1.20 */
+.lg-btn:active:not(:disabled) {
+  transform: translateY(0.5px) scale(0.955);
+  filter: brightness(0.98);
+}
+
+/* Variante 1: Frosted Glass Button (Cristal Esmerilado Satinado) */
+.lg-btn-frosted {
+  background: var(--lg-frosted-bg);
+  border: 1px solid var(--lg-rim-inner);
+  box-shadow:
+    0 10px 24px -8px var(--lg-contact-shadow),
+    inset 0 1.5px 0.5px 0 var(--lg-rim-top),
+    inset 0 0 0 1px var(--lg-fresnel-glow),
+    inset 0 -6px 14px -8px rgba(0, 0, 0, 0.16);
+}
+
+/* Variante 2: Smoked Glass Button (Cristal Ahumado Profundo / TriangleGlassButtons) */
+.lg-btn-smoked {
+  background: var(--lg-smoked-bg);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 12px 28px -8px rgba(0, 0, 0, 0.65),
+    inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.32),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+    inset 0 -8px 16px -10px rgba(0, 0, 0, 0.55);
+}
+
+/* Variante 3: Clear Glass Button (Refracción Pura sin Blur) */
+.lg-btn-clear {
+  background: var(--lg-clear-bg);
+  backdrop-filter: blur(2px) saturate(190%) contrast(1.04);
+  -webkit-backdrop-filter: blur(2px) saturate(190%) contrast(1.04);
+  color: var(--mk-ink);
+  border: 1px solid color-mix(in srgb, var(--lg-rim-top) 60%, var(--lg-rim-inner));
+  box-shadow:
+    0 10px 24px -8px var(--lg-contact-shadow),
+    inset 0 1.75px 0.75px 0 var(--lg-rim-top),
+    inset 0 -1.25px 0.75px 0 var(--lg-fresnel-glow),
+    inset 0 0 12px 0 var(--lg-fresnel-glow);
+}
+
+/* Variante 4: Accent Glass Button (Teñido con --accent-warm y bisel biconvexo) */
+.lg-btn-accent {
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--accent-warm) 85%, #ffffff 15%) 0%,
+    var(--accent-warm) 52%,
+    var(--accent-warm-2) 100%
+  );
+  color: var(--on-accent);
+  border: 1px solid color-mix(in srgb, var(--accent-warm) 65%, #ffffff 35%);
+  box-shadow:
+    0 10px 24px -6px color-mix(in srgb, var(--accent-warm) 65%, transparent),
+    inset 0 1.75px 0.75px 0 rgba(255, 255, 255, 0.48),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.16),
+    inset 0 -8px 16px -10px rgba(0, 0, 0, 0.30);
+}
+
+/* Variante 5: Primary Deep Glass (#003049 con bisel cálido) */
+.lg-btn-primary {
+  background: linear-gradient(
+    140deg,
+    rgba(12, 74, 110, 0.92) 0%,
+    rgba(0, 48, 73, 0.96) 55%,
+    rgba(0, 32, 50, 0.98) 100%
+  );
+  color: #ebe2b7;
+  border: 1px solid rgba(235, 226, 183, 0.28);
+  box-shadow:
+    0 12px 26px -8px rgba(0, 24, 40, 0.65),
+    inset 0 1.5px 0.5px 0 rgba(255, 248, 225, 0.38),
+    inset 0 -8px 16px -10px rgba(0, 0, 0, 0.45);
+}
+
+/* Variante 6: Danger Glass (Rubí refractivo) */
+.lg-btn-danger {
+  background: linear-gradient(
+    140deg,
+    rgba(239, 68, 68, 0.22) 0%,
+    rgba(214, 39, 37, 0.14) 100%
+  );
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.38);
+  box-shadow:
+    0 8px 20px -8px rgba(239, 68, 68, 0.32),
+    inset 0 1.25px 0.5px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* Variante 7: Success Glass (Esmeralda refractivo) */
+.lg-btn-success {
+  background: linear-gradient(
+    140deg,
+    rgba(16, 185, 129, 0.24) 0%,
+    rgba(5, 150, 105, 0.15) 100%
+  );
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.40);
+  box-shadow:
+    0 8px 20px -8px rgba(16, 185, 129, 0.32),
+    inset 0 1.25px 0.5px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* Variante 8: Ghost Glass */
+.lg-btn-ghost {
+  background: transparent;
+  color: var(--mk-muted);
+  border: 1px solid transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.lg-btn-ghost:hover:not(:disabled) {
+  background: var(--lg-frosted-bg);
+  color: var(--mk-ink);
+  border-color: var(--lg-rim-inner);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Modo Domo (bevelMode: 1 — Lente Esférica Plano-Convexa) */
+.lg-btn-dome {
+  box-shadow:
+    0 14px 30px -6px var(--lg-contact-shadow),
+    inset 0 3px 4px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -6px 14px -4px rgba(0, 0, 0, 0.28),
+    inset 0 0 14px 2px rgba(255, 255, 255, 0.16) !important;
+}
+
+/* Superficies LiquidCard (.lg-surface-*) */
+.lg-card {
+  backdrop-filter: blur(var(--lg-blur, 20px)) saturate(175%);
+  -webkit-backdrop-filter: blur(var(--lg-blur, 20px)) saturate(175%);
+  transition:
+    transform 0.26s cubic-bezier(0.25, 1, 0.3, 1),
+    box-shadow 0.26s ease,
+    border-color 0.26s ease,
+    background 0.26s ease;
+}
+
+.lg-surface-frosted {
+  background: var(--lg-frosted-bg);
+  color: var(--mk-ink);
+  border: 1px solid var(--mk-border);
+  box-shadow: var(--mk-shadow);
+}
+
+.lg-surface-clear {
+  background: var(--lg-clear-bg);
+  backdrop-filter: blur(2px) saturate(185%) contrast(1.04);
+  -webkit-backdrop-filter: blur(2px) saturate(185%) contrast(1.04);
+  color: var(--mk-ink);
+  border: 1px solid color-mix(in srgb, var(--lg-rim-top) 55%, var(--mk-border));
+  box-shadow:
+    0 16px 34px -12px var(--lg-contact-shadow),
+    inset 0 1.75px 0.75px 0 var(--lg-rim-top),
+    inset 0 0 18px 0 var(--lg-fresnel-glow);
+}
+
+.lg-surface-smoked {
+  background: var(--lg-smoked-bg);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow:
+    0 18px 38px -12px rgba(0, 0, 0, 0.75),
+    inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.28),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.lg-surface-accent {
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--accent-warm) 88%, #ffffff 12%) 0%,
+    var(--accent-warm) 55%,
+    var(--accent-warm-2) 100%
+  );
+  color: var(--on-accent);
+  border: 1px solid color-mix(in srgb, var(--accent-warm) 65%, #ffffff 35%);
+  box-shadow:
+    0 16px 34px -10px color-mix(in srgb, var(--accent-warm) 65%, transparent),
+    inset 0 1.75px 1px 0 rgba(255, 255, 255, 0.48),
+    inset 0 -10px 20px -12px rgba(0, 0, 0, 0.28);
+}
+
+.lg-surface-dome {
+  background: var(--lg-clear-bg);
+  backdrop-filter: blur(4px) saturate(195%);
+  -webkit-backdrop-filter: blur(4px) saturate(195%);
+  color: var(--mk-ink);
+  border: 1px solid color-mix(in srgb, var(--lg-rim-top) 65%, var(--mk-border));
+  box-shadow:
+    0 18px 36px -10px var(--lg-contact-shadow),
+    inset 0 3px 5px 0 var(--lg-rim-top),
+    inset 0 -8px 18px -8px rgba(0, 0, 0, 0.22),
+    inset 0 0 22px 2px var(--lg-fresnel-glow);
+}
+
+.lg-card-interactive:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent-warm) 38%, var(--mk-border));
+}
+
+.lg-card-interactive:active {
+  transform: scale(0.982);
+}
+
+.lg-card-selected {
+  background: linear-gradient(
+    140deg,
+    color-mix(in srgb, var(--accent-warm) 90%, #ffffff 10%) 0%,
+    var(--accent-warm) 55%,
+    var(--accent-warm-2) 100%
+  ) !important;
+  color: var(--on-accent) !important;
+  border-color: color-mix(in srgb, var(--accent-warm) 70%, #ffffff 30%) !important;
+}
+
+/* ========================================================= */
+/* INTEGRACIÓN DEL SISTEMA GLISSE (https://glisse.kelvinzhang.ca/) */
+/* TabBar, SegmentedControl, Switch, Glass & Button          */
+/* ========================================================= */
+:root,
+[data-theme="light"] {
+  --lg-on: #d62725;
+  --lg-fill: #d62725;
+  --lg-glass: rgba(255, 255, 255, 0.66);
+  --lg-glass-active: rgba(240, 240, 245, 0.88);
+  --lg-segment-track: rgba(0, 48, 73, 0.08);
+  --lg-segment-thumb: #ffffff;
+  --lg-segment-label: #003049;
+}
+
+[data-theme="dark"] {
+  --lg-on: #fcbf48;
+  --lg-fill: #fcbf48;
+  --lg-glass: rgba(28, 28, 32, 0.68);
+  --lg-glass-active: rgba(56, 56, 62, 0.72);
+  --lg-segment-track: rgba(255, 255, 255, 0.06);
+  --lg-segment-thumb: rgba(255, 255, 255, 0.22);
+  --lg-segment-label: #f4f4f6;
+}
+
+/* SegmentedControl con pastilla de acento (Rojo en Día / Amarillo con texto negro en Noche) */
+.glisse-segmented-accent {
+  --lg-segment-thumb: var(--accent-warm);
+}
+
+.glisse-segmented-accent:not([data-lifted]):not([data-away]) .lg-tab[data-selected] {
+  color: var(--on-accent) !important;
+  font-weight: 700 !important;
+}
+
+/* Switcher de Agenda / Calendario: mismo alto (38px) que el botón '+' */
+.glisse-calendar-switcher {
+  --lg-tab-height: 38px;
+  --lg-tab-width: 40px;
+  --lg-thumb-inset: 3px;
+  --lg-lens-grow-x: 18px;
+  --lg-lens-grow-y: 12px;
+  --lg-segment-thumb: #d62725;
+}
+
+[data-theme="dark"] .glisse-calendar-switcher {
+  --lg-segment-thumb: #fcbf48;
+}
+
+.glisse-calendar-switcher:not([data-lifted]):not([data-away]) .lg-tab[data-selected] {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .glisse-calendar-switcher:not([data-lifted]):not([data-away]) .lg-tab[data-selected] {
+  color: #000000 !important;
+}
+
+/* TabBar principal del Dock inferior móvil con lente refractivo Glisse */
+.glisse-dock-tabbar.lg-tab-bar[data-icons] {
+  --lg-tab-width: clamp(52px, 15vw, 64px);
+  --lg-tab-height: 48px;
+  --lg-tab-inset: 4px;
+  --lg-lens-grow-x: 20px;
+  --lg-lens-grow-y: 12px;
+  --lg-tab-selected: var(--accent-warm);
+}
+
+.glisse-dock-tabbar.lg-tab-bar[data-icons] :is(.lg-tab, .lg-tab-copy) {
+  flex-direction: row !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 0 !important;
+}
+
+.glisse-dock-tabbar .lg-tab-label {
+  display: none !important;
+}
+
+.glisse-dock-tabbar .lg-tab-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1;
+}
+
+.glisse-dock-tabbar .lg-tab-icon > svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Segmented Control Track (legacy wrapper) */
+.lg-segmented-track {
+  background: var(--mk-track);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  border: 1px solid var(--mk-border);
+  box-shadow:
+    inset 0 1.5px 3px rgba(0, 0, 0, 0.12),
+    inset 0 -1px 0 var(--lg-rim-top);
+}
+
+/* Animación elástica de burbuja de TriangleGlassButtons */
+@keyframes lgBubblePop {
+  0% {
+    opacity: 0;
+    transform: scale(0.25) translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.lg-bubble-enter {
+  animation: lgBubblePop 0.65s cubic-bezier(0.34, 1.8, 0.64, 1) both;
+}
+
+@keyframes mkFadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mk-enter {
+  animation: mkFadeUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ========================================================= */
+/* AUTO-HIDE MOBILE DOCK & FAB EN IPHONE                     */
+/* Desaparece suavemente al abrir el FAB (+) o el teclado   */
+/* ========================================================= */
+#mobile-dock-container {
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.22s ease-out;
+  will-change: transform, opacity;
+}
+
+body[data-sheet-open="true"] #mobile-dock-container,
+body.keyboard-visible #mobile-dock-container,
+body.modal-open #mobile-dock-container,
+#mobile-dock-container.dock-hidden {
+  transform: translateY(160%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* ========================================================= */
+/* ANIMACIÓN INFINITA DEL FONDO (MODO OSCURO Y MODO CLARO)   */
+/* ========================================================= */
+@keyframes bgInfiniteDriftPrimary {
+  0% {
+    transform: scale(1.26) translate3d(0%, 0%, 0) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.32) translate3d(-6%, 5%, 0) rotate(2.5deg);
+  }
+  50% {
+    transform: scale(1.28) translate3d(5%, -6%, 0) rotate(-2deg);
+  }
+  75% {
+    transform: scale(1.34) translate3d(6%, 4%, 0) rotate(1.8deg);
+  }
+  100% {
+    transform: scale(1.26) translate3d(0%, 0%, 0) rotate(0deg);
+  }
+}
+
+@keyframes bgInfiniteDriftSecondary {
+  0% {
+    transform: scale(1.35) translate3d(4%, -4%, 0) rotate(180deg);
+  }
+  33% {
+    transform: scale(1.28) translate3d(-7%, -3%, 0) rotate(184deg);
+  }
+  66% {
+    transform: scale(1.36) translate3d(3%, 7%, 0) rotate(176deg);
+  }
+  100% {
+    transform: scale(1.35) translate3d(4%, -4%, 0) rotate(180deg);
+  }
+}
+
+.bg-infinite-drift-primary {
+  animation: bgInfiniteDriftPrimary 22s ease-in-out infinite;
+  will-change: transform;
+}
+
+.bg-infinite-drift-secondary {
+  animation: bgInfiniteDriftSecondary 28s ease-in-out infinite;
+  will-change: transform;
+}
+
+
+
