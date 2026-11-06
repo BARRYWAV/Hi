@@ -250,11 +250,49 @@ export default function DashboardView() {
   return (
     <div className="space-y-5 pb-20">
       {/* ========================================================= */}
-      {/* FILA 1: Saludo Contextual + Cápsula Liquid Glass Derecha  */}
+      {/* FILA 1: Icono de Usuario a la izquierda + Saludo           */}
       {/* ========================================================= */}
-      <div className="flex items-stretch justify-between gap-3 pt-1">
-        {/* Columna izquierda: BUENAS TARDES / Nombre */}
-        <div className="flex flex-col justify-center shrink-0">
+      <div className="flex items-center gap-3 pt-1">
+        {/* Icono / Avatar circular Liquid Glass a la izquierda del saludo */}
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={() => {
+            triggerHaptic(20);
+            setCurrentTab('settings');
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              triggerHaptic(20);
+              setCurrentTab('settings');
+            }
+          }}
+          className="relative w-11 h-11 rounded-full liquid-glass-pill lg-btn lg-btn-clear lg-btn-dome flex items-center justify-center active:scale-95 transition-transform shrink-0 cursor-pointer overflow-hidden"
+          title="Ajustes y Perfil"
+        >
+          {/* Reflejo especular superior de gota de cristal */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute top-0.5 inset-x-2 h-2.5 rounded-full bg-gradient-to-b from-white/80 to-transparent blur-[0.5px] z-20"
+          />
+          {activeUser.avatarUrl ? (
+            <Image
+              src={activeUser.avatarUrl}
+              alt={activeUser.displayName || 'Usuario'}
+              width={44}
+              height={44}
+              className="w-full h-full rounded-full object-cover relative z-10"
+            />
+          ) : (
+            <UserIcon
+              className="relative z-10 w-5 h-5 text-[color:var(--accent-warm)]"
+              strokeWidth={2.3}
+            />
+          )}
+        </div>
+
+        {/* Saludo: BUENAS NOCHES / Usuario */}
+        <div className="flex flex-col justify-center">
           <span className="text-[11px] font-extrabold tracking-wider text-[color:var(--accent-warm)] uppercase block leading-none">
             {greeting}
           </span>
@@ -262,67 +300,6 @@ export default function DashboardView() {
             {activeUser.displayName || 'Alejandro'}
           </h1>
         </div>
-
-        {/* Cápsula Liquid Glass derecha: muestra próximo evento o estado + avatar */}
-        <LiquidCard
-          variant="frosted"
-          cornerRadius={18}
-          interactive
-          onClick={() => {
-            triggerHaptic(20);
-            setCurrentTab(nextImmediateEvent ? 'calendar' : 'settings');
-          }}
-          className="flex-1 min-w-0 max-w-[215px] min-h-[54px] px-3 py-2 flex items-center justify-between gap-2"
-          title={nextImmediateEvent ? 'Ver en Calendario' : 'Ver perfil y ajustes'}
-        >
-          {nextImmediateEvent ? (
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider text-[color:var(--accent-warm)]">
-                <Clock className="w-2.5 h-2.5 shrink-0" />
-                <span className="truncate">{nextImmediateEvent.startTime || 'Hoy'}</span>
-              </div>
-              <p className="text-[11px] font-extrabold text-[var(--mk-ink)] truncate mt-0.5 flex items-center gap-1">
-                {nextImmediateEvent.isRedacted && (
-                  <Lock className="w-2.5 h-2.5 text-[var(--mk-muted)] shrink-0" />
-                )}
-                <span className="truncate">{nextImmediateEvent.title}</span>
-              </p>
-            </div>
-          ) : (
-            <div className="min-w-0 flex-1">
-              <span className="text-[9px] font-extrabold uppercase tracking-wider text-[var(--mk-muted)] block leading-none">
-                {authUser?.isPaired ? `Sincro • ${authUser.partnerName}` : 'Agenda de hoy'}
-              </span>
-              <p className="text-[11px] font-bold text-[var(--mk-ink)] truncate mt-1 flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-[color:var(--accent-warm)] shrink-0" />
-                <span>Sin eventos</span>
-              </p>
-            </div>
-          )}
-
-          {/* Avatar circular con bisel Domo */}
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              triggerHaptic(20);
-              setCurrentTab('settings');
-            }}
-            className="w-8 h-8 rounded-full overflow-hidden border border-[color:var(--accent-warm)]/60 bg-[var(--mk-tile)] flex items-center justify-center shrink-0 shadow-sm"
-            title="Ajustes y Perfil"
-          >
-            {activeUser.avatarUrl ? (
-              <Image
-                src={activeUser.avatarUrl}
-                alt={activeUser.displayName || 'Usuario'}
-                width={32}
-                height={32}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <UserIcon className="w-4 h-4 text-[color:var(--accent-warm)]" />
-            )}
-          </div>
-        </LiquidCard>
       </div>
 
       {/* ========================================================= */}
@@ -574,26 +551,96 @@ export default function DashboardView() {
         </div>
       </LiquidCard>
 
-      {/* Carrusel de chips compactos si existen recordatorios de "Todo el día" */}
-      {allDayReminders.length > 0 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-          {allDayReminders.map((reminder) => (
-            <div
-              key={reminder.id}
-              onClick={() => setCurrentTab('calendar')}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full liquid-glass-pill shrink-0 active:scale-95 transition-all cursor-pointer"
-            >
-              <span
-                className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: reminder.color || 'var(--accent-warm)' }}
-              />
-              <span className="text-[11px] font-semibold text-[var(--mk-ink)] truncate max-w-[140px]">
-                {reminder.title}
-              </span>
+      {/* ========================================================= */}
+      {/* FILA 4: AGENDA (Debajo de Salud: Próximo evento del día)   */}
+      {/* ========================================================= */}
+      <LiquidCard
+        variant="frosted"
+        cornerRadius={22}
+        interactive
+        onClick={() => {
+          triggerHaptic(20);
+          setCurrentTab('calendar');
+        }}
+        className="p-3.5 space-y-2.5"
+        title="Ir al Calendario"
+      >
+        <span className="mk-label">Agenda</span>
+
+        {nextImmediateEvent ? (
+          <div className="rounded-[18px] lg-btn lg-btn-frosted p-3.5 relative overflow-hidden flex items-center justify-between">
+            <div className="min-w-0 pr-3 relative z-10">
+              <h3 className="text-sm font-extrabold text-[var(--mk-ink)] truncate flex items-center gap-1.5">
+                {nextImmediateEvent.isRedacted && (
+                  <Lock className="w-3.5 h-3.5 text-[var(--mk-muted)]" />
+                )}
+                {nextImmediateEvent.title}
+              </h3>
+
+              <div className="flex items-center gap-2 mt-1">
+                <span className="inline-flex items-center gap-1 text-[10px] text-[var(--mk-muted)] font-medium">
+                  <Clock className="w-3 h-3 text-[color:var(--accent-warm)]" />
+                  {nextImmediateEvent.startTime}{' '}
+                  {nextImmediateEvent.endTime ? `- ${nextImmediateEvent.endTime}` : ''}
+                </span>
+
+                <span
+                  className="px-2 py-0.5 rounded-full text-[9px] font-bold border border-white/30 dark:border-white/10"
+                  style={{
+                    backgroundColor: `${nextImmediateEvent.color || '#d62725'}22`,
+                    color: nextImmediateEvent.color || 'var(--accent-warm)',
+                  }}
+                >
+                  {nextImmediateEvent.category}
+                </span>
+              </div>
             </div>
-          ))}
-        </div>
-      )}
+
+            <div
+              className="w-1.5 self-stretch rounded-full shrink-0 shadow-sm"
+              style={{ backgroundColor: nextImmediateEvent.color || 'var(--accent-warm)' }}
+            />
+          </div>
+        ) : (
+          <div className="rounded-[18px] lg-btn lg-btn-frosted p-3.5 flex items-center gap-3 group">
+            <div className="w-9 h-9 rounded-full bg-[var(--mk-tile)] flex items-center justify-center text-[color:var(--accent-warm)] shrink-0 group-hover:scale-105 transition-transform">
+              <Calendar className="w-4 h-4" strokeWidth={2.3} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-[var(--mk-ink)] leading-tight">
+                Sin eventos programados para hoy
+              </p>
+              <p className="text-[10px] text-[var(--mk-muted)] mt-0.5">
+                Toca para abrir el calendario o usa el botón +
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Carrusel de chips compactos si existen recordatorios de "Todo el día" */}
+        {allDayReminders.length > 0 && (
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
+            {allDayReminders.map((reminder) => (
+              <div
+                key={reminder.id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentTab('calendar');
+                }}
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full liquid-glass-pill shrink-0 active:scale-95 transition-all cursor-pointer"
+              >
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: reminder.color || 'var(--accent-warm)' }}
+                />
+                <span className="text-[11px] font-semibold text-[var(--mk-ink)] truncate max-w-[140px]">
+                  {reminder.title}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </LiquidCard>
     </div>
   );
 }

@@ -50,7 +50,7 @@ export default function AppsView({ initialApp = null }: AppsViewProps) {
   // Cuando una app está seleccionada
   if (selectedApp) {
     return (
-      <div className="w-full space-y-4 pb-20 animate-fade-in">
+      <div className="w-full space-y-4 pt-3 pb-20 animate-fade-in">
         <div className="flex items-center justify-between pt-1">
           <button
             onClick={handleBackToGrid}
@@ -75,7 +75,7 @@ export default function AppsView({ initialApp = null }: AppsViewProps) {
 
   // Vista principal: Bento Mosaico con Liquid Glass (.mk-card .mk-select-card) e iconos de Lucide
   return (
-    <div className="space-y-3 pb-24 max-w-xl mx-auto pt-2">
+    <div className="space-y-3.5 pb-24 max-w-xl mx-auto pt-11 sm:pt-14">
       {/* ========================================================= */}
       {/* TARJETA 1 (Superior, ancha): FINANZAS                     */}
       {/* ========================================================= */}
