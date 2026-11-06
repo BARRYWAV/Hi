@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '@/context/AppContext';
 import {
   Clock,
@@ -10,10 +11,13 @@ import {
   Lock,
   User as UserIcon,
   Calendar,
-  Plus,
+  Wifi,
+  Repeat,
 } from 'lucide-react';
 import Image from 'next/image';
-import { LiquidPill } from '@/components/ui/liquid-glass';
+import { LiquidCard } from '@/components/ui/liquid-glass';
+import { useCustomBanks } from '@/components/finances/banks';
+import { money } from '@/components/finances/format';
 
 interface CyclicMetricRingProps {
   current: number;
@@ -112,20 +116,41 @@ function CyclicMetricRing({
   );
 }
 
+interface DashboardCardItem {
+  id: string;
+  name: string;
+  subtitle: string;
+  balance: number;
+  number: string;
+  network: string;
+  /** Gradiente translúcido Liquid Glass para la tarjeta frontal */
+  glassTint: string;
+  /** Borde luminoso perimetral */
+  glassBorder: string;
+  /** Sombra coloreada de contacto */
+  glowShadow: string;
+  /** Color de la tarjeta cuando se asoma por detrás en la pila */
+  backPeekBg: string;
+}
+
 export default function DashboardView() {
   const {
     activeUser,
     authUser,
+    accountBalances,
     nextImmediateEvent,
     allDayReminders,
     weeklyWorkoutsCount,
     workoutGoalPerWeek,
     todayHabit,
     setCurrentTab,
+    openCaptureSheet,
     triggerHaptic,
   } = useApp();
 
-  const [greeting, setGreeting] = React.useState('BUENAS TARDES');
+  const { banks: customBanks } = useCustomBanks();
+  const [activeCardIdx, setActiveCardIdx] = useState(0);
+  const [greeting, setGreeting] = useState('BUENAS TARDES');
 
   React.useEffect(() => {
     try {
@@ -138,79 +163,336 @@ export default function DashboardView() {
     }
   }, []);
 
+  // Tarjetas con estética Liquid Glass (cristal esmerilado teñido + refracción especular)
+  const walletCards = useMemo<DashboardCardItem[]>(() => {
+    const base: DashboardCardItem[] = [
+      {
+        id: 'card-bbva',
+        name: 'BBVA',
+        subtitle: ' Cuenta Débito',
+        balance: accountBalances.BBVA,
+        number: '0000  1234  9999  2344',
+        network: 'Visa',
+        glassTint:
+          'linear-gradient(135deg, rgba(147, 197, 253, 0.58) 0%, rgba(59, 154, 225, 0.72) 50%, rgba(29, 111, 184, 0.84) 100%)',
+        glassBorder: 'rgba(191, 219, 254, 0.72)',
+        glowShadow: '0 18px 36px -10px rgba(29, 111, 184, 0.42)',
+        backPeekBg:
+          'linear-gradient(135deg, rgba(59, 154, 225, 0.85) 0%, rgba(29, 78, 216, 0.92) 100%)',
+      },
+      {
+        id: 'card-nu',
+        name: 'Nu',
+        subtitle: 'Cuenta & Cajita',
+        balance: accountBalances.Nu,
+        number: '5204  8812  4091  7731',
+        network: 'Mastercard',
+        glassTint:
+          'linear-gradient(135deg, rgba(216, 180, 254, 0.56) 0%, rgba(138, 63, 252, 0.72) 50%, rgba(88, 28, 135, 0.84) 100%)',
+        glassBorder: 'rgba(233, 213, 255, 0.70)',
+        glowShadow: '0 18px 36px -10px rgba(138, 63, 252, 0.42)',
+        backPeekBg:
+          'linear-gradient(135deg, rgba(239, 68, 68, 0.85) 0%, rgba(214, 39, 37, 0.92) 100%)',
+      },
+      {
+        id: 'card-efectivo',
+        name: 'Efectivo',
+        subtitle: 'Liquidez inmediata',
+        balance: accountBalances.Efectivo,
+        number: '••••  ••••  ••••  CASH',
+        network: 'Disponible',
+        glassTint:
+          'linear-gradient(135deg, rgba(110, 231, 183, 0.56) 0%, rgba(16, 185, 129, 0.72) 50%, rgba(4, 120, 87, 0.84) 100%)',
+        glassBorder: 'rgba(167, 243, 208, 0.72)',
+        glowShadow: '0 18px 36px -10px rgba(16, 185, 129, 0.38)',
+        backPeekBg:
+          'linear-gradient(135deg, rgba(16, 185, 129, 0.85) 0%, rgba(4, 120, 87, 0.92) 100%)',
+      },
+    ];
+
+    const extras: DashboardCardItem[] = customBanks.map((b, i) => ({
+      id: b.id,
+      name: b.name,
+      subtitle: b.kind === 'TC' ? 'Tarjeta Crédito' : 'Tarjeta Débito',
+      balance: b.balance,
+      number: `4152  310${i}  8842  ${1090 + i}`,
+      network: b.kind === 'TC' ? 'Visa' : 'Visa Débito',
+      glassTint: `linear-gradient(135deg, color-mix(in srgb, ${b.color} 52%, rgba(255,255,255,0.65)) 0%, color-mix(in srgb, ${b.color} 76%, transparent) 55%, color-mix(in srgb, ${b.color} 86%, #000000 14%) 100%)`,
+      glassBorder: `color-mix(in srgb, ${b.color} 50%, #ffffff 50%)`,
+      glowShadow: `0 18px 36px -10px color-mix(in srgb, ${b.color} 45%, transparent)`,
+      backPeekBg: `linear-gradient(135deg, ${b.color} 0%, color-mix(in srgb, ${b.color} 80%, #000000 20%) 100%)`,
+    }));
+
+    return [...base, ...extras];
+  }, [accountBalances, customBanks]);
+
+  const safeIdx = activeCardIdx % walletCards.length;
+  const currentCard = walletCards[safeIdx];
+  const nextCard = walletCards[(safeIdx + 1) % walletCards.length];
+
+  const handleNextCard = () => {
+    triggerHaptic(25);
+    setActiveCardIdx((prev) => (prev + 1) % walletCards.length);
+  };
+
   // Métricas de Salud calculadas (cíclicas, sin tope en 100%)
-  // 1. Calorías (se vuelve rojo después de completar la primera vuelta)
   const caloriesConsumed = todayHabit.calories ?? 0;
   const caloriesTarget = 2200;
   const caloriesExceeded = caloriesConsumed > caloriesTarget;
 
-  // 2. Agua (en litros)
   const waterLitersNum = todayHabit.waterMl > 0 ? todayHabit.waterMl / 1000 : 0;
   const waterLiters = waterLitersNum.toFixed(1);
   const waterTargetLiters = 2.5;
 
-  // 3. Ejercicio semanal
   const workoutGoal = workoutGoalPerWeek || 3;
   const workoutCurrent = weeklyWorkoutsCount || 0;
 
   return (
-    <div className="space-y-3.5 pb-20">
+    <div className="space-y-5 pb-20">
       {/* ========================================================= */}
-      {/* HEADER: Saludo Contextual + Avatar Domo 3D                 */}
+      {/* FILA 1: Saludo Contextual + Cápsula Liquid Glass Derecha  */}
       {/* ========================================================= */}
-      <div className="flex items-center justify-between pt-1">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-extrabold tracking-wider text-[color:var(--accent-warm)] uppercase block leading-none">
-              {greeting}
-            </span>
-            {authUser?.isPaired && (
-              <LiquidPill variant="frosted" size="xs" dotColor="#10b981">
-                {`Sincro • ${authUser.partnerName}`}
-              </LiquidPill>
-            )}
-          </div>
-          <h1 className="text-2xl font-extrabold text-[var(--mk-ink)] tracking-tight mt-1 leading-none">
-            {activeUser.displayName || 'Bienvenido'}
+      <div className="flex items-stretch justify-between gap-3 pt-1">
+        {/* Columna izquierda: BUENAS TARDES / Nombre */}
+        <div className="flex flex-col justify-center shrink-0">
+          <span className="text-[11px] font-extrabold tracking-wider text-[color:var(--accent-warm)] uppercase block leading-none">
+            {greeting}
+          </span>
+          <h1 className="text-[26px] font-black text-[var(--mk-ink)] tracking-tight mt-1 leading-none">
+            {activeUser.displayName || 'Alejandro'}
           </h1>
         </div>
 
-        <div
-          role="button"
-          tabIndex={0}
+        {/* Cápsula Liquid Glass derecha: muestra próximo evento o estado + avatar */}
+        <LiquidCard
+          variant="frosted"
+          cornerRadius={18}
+          interactive
           onClick={() => {
             triggerHaptic(20);
-            setCurrentTab('settings');
+            setCurrentTab(nextImmediateEvent ? 'calendar' : 'settings');
           }}
-          className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-[color:var(--accent-warm)] p-0.5 lg-btn lg-btn-dome active:scale-95 transition-transform shrink-0 cursor-pointer"
-          title="Ver perfil y ajustes"
+          className="flex-1 min-w-0 max-w-[215px] min-h-[54px] px-3 py-2 flex items-center justify-between gap-2"
+          title={nextImmediateEvent ? 'Ver en Calendario' : 'Ver perfil y ajustes'}
         >
-          <div className="w-full h-full rounded-full overflow-hidden bg-[var(--mk-tile)] flex items-center justify-center">
+          {nextImmediateEvent ? (
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1 text-[9px] font-extrabold uppercase tracking-wider text-[color:var(--accent-warm)]">
+                <Clock className="w-2.5 h-2.5 shrink-0" />
+                <span className="truncate">{nextImmediateEvent.startTime || 'Hoy'}</span>
+              </div>
+              <p className="text-[11px] font-extrabold text-[var(--mk-ink)] truncate mt-0.5 flex items-center gap-1">
+                {nextImmediateEvent.isRedacted && (
+                  <Lock className="w-2.5 h-2.5 text-[var(--mk-muted)] shrink-0" />
+                )}
+                <span className="truncate">{nextImmediateEvent.title}</span>
+              </p>
+            </div>
+          ) : (
+            <div className="min-w-0 flex-1">
+              <span className="text-[9px] font-extrabold uppercase tracking-wider text-[var(--mk-muted)] block leading-none">
+                {authUser?.isPaired ? `Sincro • ${authUser.partnerName}` : 'Agenda de hoy'}
+              </span>
+              <p className="text-[11px] font-bold text-[var(--mk-ink)] truncate mt-1 flex items-center gap-1">
+                <Calendar className="w-3 h-3 text-[color:var(--accent-warm)] shrink-0" />
+                <span>Sin eventos</span>
+              </p>
+            </div>
+          )}
+
+          {/* Avatar circular con bisel Domo */}
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              triggerHaptic(20);
+              setCurrentTab('settings');
+            }}
+            className="w-8 h-8 rounded-full overflow-hidden border border-[color:var(--accent-warm)]/60 bg-[var(--mk-tile)] flex items-center justify-center shrink-0 shadow-sm"
+            title="Ajustes y Perfil"
+          >
             {activeUser.avatarUrl ? (
               <Image
                 src={activeUser.avatarUrl}
                 alt={activeUser.displayName || 'Usuario'}
-                width={48}
-                height={48}
+                width={32}
+                height={32}
                 className="w-full h-full object-cover"
               />
             ) : (
-              <UserIcon className="w-6 h-6 text-[color:var(--accent-warm)]" />
+              <UserIcon className="w-4 h-4 text-[color:var(--accent-warm)]" />
             )}
           </div>
-        </div>
+        </LiquidCard>
       </div>
 
       {/* ========================================================= */}
-      {/* SECCIÓN 1: SALUD (Formato de 3 tarjetas con anillo cíclico) */}
+      {/* FILA 2: Tarjetas Bancarias Liquid Glass + Switcher Lateral */}
       {/* ========================================================= */}
-      <section className="space-y-1.5">
+      <section aria-label="Tarjetas bancarias" className="pt-0.5">
+        <div className="flex items-start gap-2.5">
+          {/* Pila de Tarjetas Liquid Glass (Izquierda) */}
+          <div className="relative flex-1 min-w-0 pb-3.5 pr-3">
+            {/* Tarjeta trasera (segunda tarjeta) asomándose abajo y a la derecha */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-x-0 top-0 bottom-3.5 right-3 translate-x-3 translate-y-3.5 rounded-[22px] backdrop-blur-xl transition-all duration-300 z-0"
+              style={{
+                background:
+                  safeIdx === 0
+                    ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.88) 0%, rgba(214, 39, 37, 0.95) 100%)'
+                    : nextCard.backPeekBg,
+                border: '1px solid rgba(255, 255, 255, 0.42)',
+                boxShadow:
+                  '0 12px 24px -8px rgba(0, 0, 0, 0.28), inset 0 1px 0.5px rgba(255, 255, 255, 0.5)',
+              }}
+            />
+
+            {/* Tarjeta frontal activa con refracción Liquid Glass */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={currentCard.id}
+                initial={{ opacity: 0, x: 20, scale: 0.96, rotateY: -6 }}
+                animate={{ opacity: 1, x: 0, scale: 1, rotateY: 0 }}
+                exit={{ opacity: 0, x: -20, scale: 0.96, rotateY: 6 }}
+                transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  triggerHaptic(20);
+                  setCurrentTab('finances');
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    triggerHaptic(20);
+                    setCurrentTab('finances');
+                  }
+                }}
+                className="relative z-10 rounded-[22px] p-4 h-[154px] flex flex-col justify-between cursor-pointer select-none overflow-hidden backdrop-blur-2xl saturate-[190%] active:scale-[0.985] transition-transform"
+                style={{
+                  background: `linear-gradient(180deg, rgba(255, 255, 255, 0.38) 0%, rgba(255, 255, 255, 0.04) 42%, transparent 100%), ${currentCard.glassTint}`,
+                  border: `1px solid ${currentCard.glassBorder}`,
+                  boxShadow: `${currentCard.glowShadow}, inset 0 2px 1px 0 rgba(255, 255, 255, 0.78), inset 0 0 0 1px rgba(255, 255, 255, 0.24), inset 0 -10px 22px -12px rgba(0, 20, 40, 0.28)`,
+                }}
+                title="Toca para abrir Finanzas"
+              >
+                {/* Destello diagonal de refracción de cristal */}
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -top-16 -left-12 w-48 h-48 rounded-full bg-white/35 blur-2xl"
+                />
+                <div
+                  aria-hidden="true"
+                  className="pointer-events-none absolute inset-0 bg-[linear-gradient(115deg,transparent_20%,rgba(255,255,255,0.24)_36%,transparent_50%)]"
+                />
+
+                {/* Fila superior: Nombre del banco en cápsula de cristal + Saldo */}
+                <div className="relative z-10 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full bg-white/30 backdrop-blur-md border border-white/50 shadow-[inset_0_1px_0.5px_rgba(255,255,255,0.8)] text-[14px] font-black tracking-tight text-[#041827] leading-none">
+                      {currentCard.name}
+                    </span>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-[20px] font-black tracking-tight text-[#041827] drop-shadow-[0_1px_0_rgba(255,255,255,0.4)] leading-none">
+                      {money(currentCard.balance).replace('.00', '')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Fila central: Chip EMV de cristal/metal + Contactless */}
+                <div className="relative z-10 flex items-center justify-between my-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-10 h-7 rounded-[7px] bg-gradient-to-br from-white/85 via-slate-200/80 to-slate-400/75 backdrop-blur-md border border-white/70 shadow-[0_2px_6px_rgba(0,0,0,0.15),inset_0_1px_1px_#ffffff] relative overflow-hidden flex items-center justify-center">
+                      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-[1px] bg-slate-600/30" />
+                      <div className="absolute inset-y-0 left-1/3 w-[1px] bg-slate-600/30" />
+                      <div className="absolute inset-y-0 right-1/3 w-[1px] bg-slate-600/30" />
+                      <div className="w-3.5 h-3.5 rounded-[3px] border border-slate-600/30 bg-amber-200/30" />
+                    </div>
+                    <Wifi className="w-4 h-4 rotate-90 text-[#041827]/70" strokeWidth={2.3} />
+                  </div>
+
+                  {/* Subtítulo discreto de la cuenta */}
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#041827]/65 px-2.5 py-0.5 rounded-full bg-white/25 backdrop-blur-sm">
+                    {currentCard.subtitle}
+                  </span>
+                </div>
+
+                {/* Fila inferior: Numeración + Marca de red (Visa / Mastercard) */}
+                <div className="relative z-10 flex items-end justify-between gap-2 pt-0.5">
+                  <p className="text-[13.5px] sm:text-[15px] font-bold tracking-[0.06em] text-[#041827]/90 font-mono leading-none truncate">
+                    {currentCard.number}
+                  </p>
+                  <span className="text-[15px] font-black italic tracking-tight text-[#041827] drop-shadow-[0_1px_0_rgba(255,255,255,0.45)] leading-none shrink-0">
+                    {currentCard.network}
+                  </span>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {/* Píldora Vertical Interactiva para intercambiar tarjetas (Formato Cápsula Stadium + Domo Circular) */}
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.94 }}
+            onClick={handleNextCard}
+            aria-label="Intercambiar tarjeta bancaria"
+            title={`Cambiar a ${nextCard.name}`}
+            style={{ height: 170 }}
+            className="relative z-20 w-[50px] h-[170px] min-h-[170px] shrink-0 rounded-full liquid-glass-pill lg-btn lg-btn-frosted p-2 flex flex-col items-center justify-between cursor-pointer group select-none"
+          >
+            {/* Indicadores verticales de las tarjetas en la pila */}
+            <div className="flex flex-col items-center gap-1.5 pt-2">
+              {walletCards.map((c, idx) => {
+                const isActive = idx === safeIdx;
+                return (
+                  <span
+                    key={c.id}
+                    className={`rounded-full transition-all duration-300 ${
+                      isActive
+                        ? 'w-2 h-5 bg-[color:var(--accent-warm)] shadow-[0_0_8px_var(--accent-warm)]'
+                        : 'w-1.5 h-1.5 bg-[var(--mk-muted)]/40 group-hover:bg-[var(--mk-muted)]/70'
+                    }`}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Botón redondito con cristal puro Liquid Glass (sin tinte amarillo) */}
+            <motion.div
+              key={safeIdx}
+              initial={{ rotate: -90, scale: 0.85 }}
+              animate={{ rotate: 0, scale: 1 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 20 }}
+              className="relative w-9 h-9 rounded-full lg-btn lg-btn-clear lg-btn-dome flex items-center justify-center group-hover:scale-105 transition-transform overflow-hidden"
+            >
+              {/* Reflejo especular superior de gota de cristal */}
+              <span
+                aria-hidden="true"
+                className="pointer-events-none absolute top-0.5 inset-x-1.5 h-2.5 rounded-full bg-gradient-to-b from-white/80 to-transparent blur-[0.5px]"
+              />
+              <Repeat
+                className="relative z-10 w-4 h-4 text-[var(--mk-ink)] opacity-80 group-hover:opacity-100 transition-opacity"
+                strokeWidth={2.4}
+              />
+            </motion.div>
+          </motion.button>
+        </div>
+      </section>
+
+      {/* ========================================================= */}
+      {/* FILA 3: SALUD (Contenedor Liquid Glass con las 3 métricas) */}
+      {/* ========================================================= */}
+      <LiquidCard variant="frosted" cornerRadius={22} className="mt-7 p-3.5 space-y-2.5">
         <span className="mk-label">Salud</span>
 
         <div className="grid grid-cols-3 gap-2.5">
-          {/* Tarjeta 1: Calorías (Verde claro en 1ra vuelta -> Rojo al superar la 1ra vuelta) */}
+          {/* Tarjeta 1: Calorías */}
           <div
-            className="rounded-[20px] lg-shape-rounded lg-btn lg-btn-frosted p-3 flex flex-col items-center justify-center gap-1.5 group relative overflow-hidden"
+            role="button"
+            tabIndex={0}
+            onClick={() => openCaptureSheet('nutrition', false)}
+            className="rounded-[20px] lg-shape-rounded lg-btn lg-btn-frosted p-3 flex flex-col items-center justify-center gap-1.5 group relative overflow-hidden cursor-pointer"
           >
             <CyclicMetricRing
               current={caloriesConsumed}
@@ -240,9 +522,12 @@ export default function DashboardView() {
             </span>
           </div>
 
-          {/* Tarjeta 2: Agua (Azul claro -> medio -> oscuro -> marino en cada vuelta) */}
+          {/* Tarjeta 2: Agua */}
           <div
-            className="rounded-[20px] lg-shape-rounded lg-btn lg-btn-frosted p-3 flex flex-col items-center justify-center gap-1.5 group relative overflow-hidden"
+            role="button"
+            tabIndex={0}
+            onClick={() => openCaptureSheet('habits', false)}
+            className="rounded-[20px] lg-shape-rounded lg-btn lg-btn-frosted p-3 flex flex-col items-center justify-center gap-1.5 group relative overflow-hidden cursor-pointer"
           >
             <CyclicMetricRing
               current={waterLitersNum}
@@ -262,9 +547,12 @@ export default function DashboardView() {
             </span>
           </div>
 
-          {/* Tarjeta 3: Ejercicio (Ámbar claro -> medio -> naranja intenso -> bronce oscuro en cada vuelta) */}
+          {/* Tarjeta 3: Ejercicio */}
           <div
-            className="rounded-[20px] lg-shape-rounded lg-btn lg-btn-frosted p-3 flex flex-col items-center justify-center gap-1.5 group relative overflow-hidden"
+            role="button"
+            tabIndex={0}
+            onClick={() => setCurrentTab('workout')}
+            className="rounded-[20px] lg-shape-rounded lg-btn lg-btn-frosted p-3 flex flex-col items-center justify-center gap-1.5 group relative overflow-hidden cursor-pointer"
           >
             <CyclicMetricRing
               current={workoutCurrent}
@@ -284,94 +572,28 @@ export default function DashboardView() {
             </span>
           </div>
         </div>
-      </section>
+      </LiquidCard>
 
-      {/* ========================================================= */}
-      {/* SECCIÓN 2: AGENDA (Compacta: Solo el próximo evento)     */}
-      {/* ========================================================= */}
-      <section className="space-y-1.5">
-        <span className="mk-label">Agenda</span>
-
-        {nextImmediateEvent ? (
-          <div
-            className="mk-card mk-card-press p-3.5 relative overflow-hidden flex items-center justify-between"
-          >
-            {/* Reflejo diagonal especular */}
+      {/* Carrusel de chips compactos si existen recordatorios de "Todo el día" */}
+      {allDayReminders.length > 0 && (
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+          {allDayReminders.map((reminder) => (
             <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -top-10 -left-10 w-32 h-32 rounded-full bg-white/20 dark:bg-white/5 blur-xl"
-            />
-
-            {/* Contenido izquierdo */}
-            <div className="min-w-0 pr-3 relative z-10">
-              <h3 className="text-sm font-extrabold text-[var(--mk-ink)] truncate flex items-center gap-1.5">
-                {nextImmediateEvent.isRedacted && <Lock className="w-3.5 h-3.5 text-[var(--mk-muted)]" />}
-                {nextImmediateEvent.title}
-              </h3>
-
-              <div className="flex items-center gap-2 mt-1">
-                <span className="inline-flex items-center gap-1 text-[10px] text-[var(--mk-muted)] font-medium">
-                  <Clock className="w-3 h-3 text-[color:var(--accent-warm)]" />
-                  {nextImmediateEvent.startTime}{' '}
-                  {nextImmediateEvent.endTime ? `- ${nextImmediateEvent.endTime}` : ''}
-                </span>
-
-                <span
-                  className="px-2 py-0.5 rounded-full text-[9px] font-bold border border-white/30 dark:border-white/10"
-                  style={{
-                    backgroundColor: `${nextImmediateEvent.color || '#d62725'}22`,
-                    color: nextImmediateEvent.color || 'var(--accent-warm)',
-                  }}
-                >
-                  {nextImmediateEvent.category}
-                </span>
-              </div>
+              key={reminder.id}
+              onClick={() => setCurrentTab('calendar')}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full liquid-glass-pill shrink-0 active:scale-95 transition-all cursor-pointer"
+            >
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: reminder.color || 'var(--accent-warm)' }}
+              />
+              <span className="text-[11px] font-semibold text-[var(--mk-ink)] truncate max-w-[140px]">
+                {reminder.title}
+              </span>
             </div>
-
-            {/* Barra lateral derecha de color según mockup */}
-            <div
-              className="w-1.5 self-stretch rounded-full shrink-0 shadow-sm"
-              style={{ backgroundColor: nextImmediateEvent.color || 'var(--accent-warm)' }}
-            />
-          </div>
-        ) : (
-          <div
-            className="mk-card p-4 text-center transition-colors flex flex-col items-center justify-center gap-1.5 group"
-          >
-            <div className="w-9 h-9 rounded-full bg-[var(--mk-tile)] flex items-center justify-center text-[color:var(--accent-warm)] group-hover:scale-105 transition-transform">
-              <Calendar className="w-4 h-4" strokeWidth={2.3} />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-[var(--mk-ink)]">
-                Sin eventos programados para hoy
-              </p>
-              <p className="text-[10px] text-[var(--mk-muted)] mt-0.5">
-                Usa el botón + para registrar uno
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Carrusel de chips compactos para tareas de "Todo el día" (Píldoras Liquid Glass) */}
-        {allDayReminders.length > 0 && (
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-            {allDayReminders.map((reminder) => (
-              <div
-                key={reminder.id}
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full liquid-glass-pill shrink-0 active:scale-95 transition-all"
-              >
-                <span
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: reminder.color || 'var(--accent-warm)' }}
-                />
-                <span className="text-[11px] font-semibold text-[var(--mk-ink)] truncate max-w-[140px]">
-                  {reminder.title}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

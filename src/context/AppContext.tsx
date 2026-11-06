@@ -194,7 +194,7 @@ interface AppContextType {
   loadDemoData: () => void;
 }
 
-export type AppTab = 'home' | 'calendar' | 'meals' | 'finances' | 'workout' | 'lifestyle' | 'settings';
+export type AppTab = 'home' | 'calendar' | 'meals' | 'finances' | 'workout' | 'lifestyle' | 'settings' | 'apps';
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 

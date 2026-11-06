@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Glass, TabBar } from 'glisse';
+import { Button, TabBar } from 'glisse';
 import { useApp, type AppTab } from '@/context/AppContext';
 import {
   LayoutDashboard,
+  LayoutGrid,
   Calendar,
-  Banknote,
-  HeartPulse,
   Plus,
   LogOut,
   Settings,
@@ -25,9 +23,8 @@ import { applyAccent, loadSettings } from '@/lib/settings';
 
 const NAV_ITEMS = [
   { id: 'home', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'apps', label: 'Apps', icon: LayoutGrid },
   { id: 'calendar', label: 'Calendario', icon: Calendar },
-  { id: 'finances', label: 'Finanzas', icon: Banknote },
-  { id: 'lifestyle', label: 'Estilo de Vida', icon: HeartPulse },
 ] as const;
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -157,13 +154,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const isTabActive = (id: string) =>
     (id === 'settings' && isSettingsOpen) ||
     currentTab === id ||
-    (id === 'lifestyle' && (currentTab === 'workout' || currentTab === 'meals'));
+    (id === 'apps' &&
+      (currentTab === 'apps' ||
+        currentTab === 'meals' ||
+        currentTab === 'finances' ||
+        currentTab === 'workout' ||
+        currentTab === 'lifestyle'));
 
-  // El botón (+) siempre muestra todos los apartados; solo abre en la pestaña de la sección actual
+  // El botón (+) abre la captura rápida
   const handleFabCapture = () => {
-    if (currentTab === 'finances') openCaptureSheet('finances', false);
-    else if (currentTab === 'meals') openCaptureSheet('nutrition', false);
-    else openCaptureSheet('habits', false);
+    openCaptureSheet('habits', false);
   };
 
   const goTo = (id: (typeof NAV_ITEMS)[number]['id'] | 'settings') => {
@@ -173,7 +173,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       return;
     }
     setIsSettingsOpen(false);
-    if (id === 'lifestyle') setLifestyleSubView('hub');
     setPreviousTab(id);
     setCurrentTab(id);
   };
@@ -235,8 +234,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
 
-            {/* Quick Sun/Moon toggle in sidebar top */}
-            <ThemeToggle variant="compact" />
+            {/* Quick Sun/Moon toggle & Settings in sidebar top */}
+            <div className="flex items-center gap-1.5">
+              <ThemeToggle variant="compact" />
+              <button
+                id="btn-settings-desktop"
+                type="button"
+                onClick={toggleSettings}
+                aria-label={isSettingsOpen ? 'Salir de Ajustes' : 'Ajustes'}
+                title={isSettingsOpen ? 'Salir de Ajustes' : 'Ajustes'}
+                className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all active:scale-90 ${
+                  isSettingsOpen
+                    ? 'lg-btn-accent text-[color:var(--on-accent)] border-transparent shadow-md'
+                    : 'lg-btn-frosted text-[color:var(--accent-warm)] border-[var(--mk-field-border)]'
+                }`}
+              >
+                <Settings className="w-4 h-4" strokeWidth={2.2} />
+              </button>
+            </div>
           </div>
 
           {/* Account Card (Desktop) */}
@@ -286,20 +301,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
           {/* Navigation Links */}
           <nav className="space-y-1.5 pt-1">
-            {[...NAV_ITEMS, { id: 'settings', label: 'Ajustes', icon: Settings } as const].map((item) => {
+            {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = isTabActive(item.id);
               return (
                 <button
                   key={item.id}
                   id={`nav-desktop-${item.id}`}
-                  onClick={() => {
-                    if (item.id === 'settings') {
-                      toggleSettings();
-                    } else {
-                      goTo(item.id);
-                    }
-                  }}
+                  onClick={() => goTo(item.id)}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-full font-bold text-xs transition-all touch-target-lg lg-btn ${
                     isActive
                       ? 'lg-btn-accent shadow-md'
@@ -332,17 +341,29 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       {/* MAIN VIEW CONTENT AREA                                    */}
       {/* ========================================================= */}
       <main className="flex-1 flex flex-col min-w-0 bg-transparent pb-24 lg:pb-0 transition-colors duration-300 relative z-10">
-        {/* Mobile Top Header */}
-        <header className="lg:hidden sticky top-0 z-30 px-3 pt-3 pb-1">
-          <Glass className="liquid-glass-pill rounded-full px-3.5 py-1.5 flex items-center justify-between gap-2 backdrop-blur-2xl">
+        {/* Mobile Top Header con verdadero acabado óptico Liquid Glass */}
+        <header className="lg:hidden sticky top-0 z-30 px-4 pt-3 pb-1">
+          <div
+            className="relative rounded-full liquid-glass-pill lg-btn-dome px-3.5 py-2 flex items-center justify-between gap-2 overflow-hidden"
+          >
+            {/* Reflejo especular superior e iluminación diagonal de lente */}
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute top-0 inset-x-4 h-[1.5px] bg-gradient-to-r from-transparent via-white/90 to-transparent"
+            />
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -top-8 left-6 w-28 h-16 rounded-full bg-white/35 dark:bg-white/12 blur-xl"
+            />
+
             <button
               type="button"
               onClick={() => goTo('home')}
-              className="flex items-center gap-2 active:scale-95 transition-transform"
+              className="relative z-10 flex items-center gap-2 active:scale-95 transition-transform"
               aria-label="Ir al Dashboard"
             >
               <div
-                className="w-6 h-6 shrink-0 transition-colors duration-300"
+                className="w-6 h-6 shrink-0 transition-colors duration-300 drop-shadow-[0_1px_1px_rgba(255,255,255,0.4)]"
                 style={{
                   maskImage: 'url(/logo-red.png)',
                   WebkitMaskImage: 'url(/logo-red.png)',
@@ -360,7 +381,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </span>
             </button>
 
-            <div className="flex items-center gap-1.5">
+            <div className="relative z-10 flex items-center gap-1.5">
               <ThemeToggle variant="compact" />
 
               <button
@@ -372,13 +393,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 className={`w-8 h-8 rounded-full flex items-center justify-center border transition-all active:scale-90 ${
                   isSettingsOpen
                     ? 'lg-btn-accent text-[color:var(--on-accent)] border-transparent shadow-md'
-                    : 'lg-btn-frosted text-[color:var(--accent-warm)] border-[var(--mk-field-border)]'
+                    : 'lg-btn lg-btn-clear lg-btn-dome text-[color:var(--accent-warm)] border-[var(--mk-field-border)]'
                 }`}
               >
                 <Settings className="w-4 h-4" strokeWidth={2.2} />
               </button>
             </div>
-          </Glass>
+          </div>
         </header>
 
         {/* Scrollable Page Body */}
@@ -403,11 +424,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             aria-label="Navegación principal"
             className="glisse-dock-tabbar shadow-2xl"
             value={
-              currentTab === 'workout' || currentTab === 'meals'
-                ? 'lifestyle'
-                : currentTab === 'settings'
-                ? previousTab
-                : currentTab
+              currentTab === 'calendar'
+                ? 'calendar'
+                : currentTab === 'apps' ||
+                  currentTab === 'meals' ||
+                  currentTab === 'finances' ||
+                  currentTab === 'workout' ||
+                  currentTab === 'lifestyle'
+                ? 'apps'
+                : 'home'
             }
             onValueChange={(id: string) => goTo(id as (typeof NAV_ITEMS)[number]['id'])}
             items={[
@@ -417,36 +442,29 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 label: '',
               },
               {
+                value: 'apps',
+                icon: <LayoutGrid className="w-5 h-5" strokeWidth={2.2} />,
+                label: '',
+              },
+              {
                 value: 'calendar',
                 icon: <Calendar className="w-5 h-5" strokeWidth={2.2} />,
-                label: '',
-              },
-              {
-                value: 'finances',
-                icon: <Banknote className="w-5 h-5" strokeWidth={2.2} />,
-                label: '',
-              },
-              {
-                value: 'lifestyle',
-                icon: <HeartPulse className="w-5 h-5" strokeWidth={2.2} />,
                 label: '',
               },
             ]}
           />
 
-          {/* FAB persistente de captura rápida (+) */}
-          <motion.div
+          {/* FAB persistente de captura rápida (+) con Liquid Glass */}
+          <Button
             id="fab-quick-capture"
-            role="button"
-            tabIndex={0}
+            variant="glass"
+            tint="var(--accent-warm)"
             aria-label="Captura rápida"
-            transition={{ duration: 0.3 }}
-            onClick={handleFabCapture}
-            className="w-[54px] h-[54px] shrink-0 rounded-full fab-floating-solid flex items-center justify-center active:scale-95 transition-all duration-200 cursor-pointer shadow-xl"
             title="Captura Rápida"
-          >
-            <Plus className="w-7 h-7 stroke-[2.8]" />
-          </motion.div>
+            onClick={handleFabCapture}
+            icon={<Plus className="w-7 h-7 stroke-[2.6]" />}
+            className="glisse-dock-fab shadow-2xl shrink-0"
+          />
         </div>
       </div>
 

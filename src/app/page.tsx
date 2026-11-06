@@ -7,9 +7,7 @@ import AuthGate from '@/components/auth/AuthGate';
 import { useApp } from '@/context/AppContext';
 import DashboardView from '@/components/dashboard/DashboardView';
 import CalendarView from '@/components/calendar/CalendarView';
-import MealsView from '@/components/meals/MealsView';
-import FinancesView from '@/components/finances/FinancesView';
-import LifestyleView from '@/components/lifestyle/LifestyleView';
+import AppsView from '@/components/apps/AppsView';
 import SettingsView from '@/components/settings/SettingsView';
 
 export default function Home() {
@@ -19,10 +17,12 @@ export default function Home() {
     <AuthGate>
       <AppLayout>
         {currentTab === 'home' && <DashboardView />}
+        {currentTab === 'apps' && <AppsView />}
         {currentTab === 'calendar' && <CalendarView />}
-        {currentTab === 'meals' && <MealsView />}
-        {currentTab === 'finances' && <FinancesView />}
-        {(currentTab === 'lifestyle' || currentTab === 'workout') && <LifestyleView />}
+        {currentTab === 'meals' && <AppsView initialApp="meals" />}
+        {currentTab === 'finances' && <AppsView initialApp="finances" />}
+        {currentTab === 'workout' && <AppsView initialApp="workout" />}
+        {currentTab === 'lifestyle' && <AppsView initialApp="couple" />}
         {currentTab === 'settings' && <SettingsView />}
       </AppLayout>
     </AuthGate>
