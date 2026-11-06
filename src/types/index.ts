@@ -36,7 +36,17 @@ export interface HabitLog {
   calories?: number;
 }
 
-export type AccountType = 'Nu' | 'BBVA' | 'Efectivo';
+/** 'Efectivo' o el id de una cuenta bancaria creada por el usuario. */
+export type AccountType = string;
+
+export interface BankAccount {
+  id: string;
+  name: string;
+  /** Saldo con el que se dio de alta la cuenta */
+  initialBalance: number;
+  kind: 'TD' | 'TC';
+  color: string;
+}
 export type TransactionType = 'INCOME' | 'EXPENSE';
 
 export interface FinanceTransaction {

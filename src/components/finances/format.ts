@@ -37,3 +37,48 @@ export const elapsedPct = (startIso: string, endIso: string) => {
   if (e <= s) return 100;
   return Math.max(0, Math.min(100, ((Date.now() - s) / (e - s)) * 100));
 };
+
+const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+export interface LoanTiming {
+  /** % de días transcurridos entre el día del préstamo y el día límite (0-100) */
+  pct: number;
+  /** Días que faltan (negativo si ya venció) */
+  daysLeft: number;
+  status: 'ok' | 'warning' | 'due' | 'overdue';
+  label: string;
+}
+
+/**
+ * Tiempo de un préstamo contado por días naturales:
+ * - Préstamo martes, límite viernes → el miércoles va ~33% (verde-amarillo).
+ * - El viernes llega al 100% (rojo en la punta).
+ * - El sábado ya está vencido → toda la barra en rojo.
+ */
+export const loanTiming = (startIso: string, dueIso: string, now = new Date()): LoanTiming => {
+  const s = startOfDay(new Date(startIso));
+  const e = startOfDay(new Date(dueIso));
+  const t = startOfDay(now);
+  const totalDays = Math.max(1, Math.round((e - s) / DAY_MS));
+  const elapsed = Math.round((t - s) / DAY_MS);
+  const daysLeft = Math.round((e - t) / DAY_MS);
+  const pct = Math.max(0, Math.min(100, (elapsed / totalDays) * 100));
+
+  if (daysLeft < 0) {
+    const d = Math.abs(daysLeft);
+    return { pct: 100, daysLeft, status: 'overdue', label: `Vencido hace ${d} ${d === 1 ? 'día' : 'días'}` };
+  }
+  if (daysLeft === 0) return { pct: 100, daysLeft, status: 'due', label: 'Vence hoy' };
+  return {
+    pct,
+    daysLeft,
+    status: pct >= 66 ? 'warning' : 'ok',
+    label: `Faltan ${daysLeft} ${daysLeft === 1 ? 'día' : 'días'}`,
+  };
+};
+
+/** yyyy-mm-dd de hoy + n días (para inputs type=date) */
+export const isoDateInDays = (n: number) => {
+  const d = new Date(Date.now() + n * DAY_MS);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};

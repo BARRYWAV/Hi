@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import { Button, TabBar } from 'glisse';
 import { useApp, type AppTab } from '@/context/AppContext';
 import {
-  LayoutDashboard,
+  Home,
   LayoutGrid,
   Calendar,
   Plus,
@@ -22,9 +22,9 @@ import { GlassFold } from '@/components/ui/glass-fold';
 import { applyAccent, loadSettings } from '@/lib/settings';
 
 const NAV_ITEMS = [
-  { id: 'home', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'apps', label: 'Apps', icon: LayoutGrid },
+  { id: 'home', label: 'Dashboard', icon: Home },
   { id: 'calendar', label: 'Calendario', icon: Calendar },
+  { id: 'apps', label: 'Apps', icon: LayoutGrid },
 ] as const;
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -438,17 +438,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             items={[
               {
                 value: 'home',
-                icon: <LayoutDashboard className="w-5 h-5" strokeWidth={2.2} />,
-                label: '',
-              },
-              {
-                value: 'apps',
-                icon: <LayoutGrid className="w-5 h-5" strokeWidth={2.2} />,
+                icon: <Home className="w-5 h-5" strokeWidth={2.2} />,
                 label: '',
               },
               {
                 value: 'calendar',
                 icon: <Calendar className="w-5 h-5" strokeWidth={2.2} />,
+                label: '',
+              },
+              {
+                value: 'apps',
+                icon: <LayoutGrid className="w-5 h-5" strokeWidth={2.2} />,
                 label: '',
               },
             ]}

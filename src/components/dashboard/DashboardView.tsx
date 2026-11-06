@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { LiquidCard } from '@/components/ui/liquid-glass';
-import { useCustomBanks } from '@/components/finances/banks';
 import { money } from '@/components/finances/format';
 
 interface CyclicMetricRingProps {
@@ -138,6 +137,7 @@ export default function DashboardView() {
     activeUser,
     authUser,
     accountBalances,
+    banks,
     nextImmediateEvent,
     allDayReminders,
     weeklyWorkoutsCount,
@@ -148,7 +148,6 @@ export default function DashboardView() {
     triggerHaptic,
   } = useApp();
 
-  const { banks: customBanks } = useCustomBanks();
   const [activeCardIdx, setActiveCardIdx] = useState(0);
   const [greeting, setGreeting] = useState('BUENAS TARDES');
 
@@ -163,71 +162,44 @@ export default function DashboardView() {
     }
   }, []);
 
-  // Tarjetas con estética Liquid Glass (cristal esmerilado teñido + refracción especular)
+  // Tarjetas con estética Liquid Glass (Efectivo siempre + bancos creados por el usuario)
   const walletCards = useMemo<DashboardCardItem[]>(() => {
-    const base: DashboardCardItem[] = [
-      {
-        id: 'card-bbva',
-        name: 'BBVA',
-        subtitle: ' Cuenta Débito',
-        balance: accountBalances.BBVA,
-        number: '0000  1234  9999  2344',
-        network: 'Visa',
-        glassTint:
-          'linear-gradient(135deg, rgba(147, 197, 253, 0.58) 0%, rgba(59, 154, 225, 0.72) 50%, rgba(29, 111, 184, 0.84) 100%)',
-        glassBorder: 'rgba(191, 219, 254, 0.72)',
-        glowShadow: '0 18px 36px -10px rgba(29, 111, 184, 0.42)',
-        backPeekBg:
-          'linear-gradient(135deg, rgba(59, 154, 225, 0.85) 0%, rgba(29, 78, 216, 0.92) 100%)',
-      },
-      {
-        id: 'card-nu',
-        name: 'Nu',
-        subtitle: 'Cuenta & Cajita',
-        balance: accountBalances.Nu,
-        number: '5204  8812  4091  7731',
-        network: 'Mastercard',
-        glassTint:
-          'linear-gradient(135deg, rgba(216, 180, 254, 0.56) 0%, rgba(138, 63, 252, 0.72) 50%, rgba(88, 28, 135, 0.84) 100%)',
-        glassBorder: 'rgba(233, 213, 255, 0.70)',
-        glowShadow: '0 18px 36px -10px rgba(138, 63, 252, 0.42)',
-        backPeekBg:
-          'linear-gradient(135deg, rgba(239, 68, 68, 0.85) 0%, rgba(214, 39, 37, 0.92) 100%)',
-      },
-      {
-        id: 'card-efectivo',
-        name: 'Efectivo',
-        subtitle: 'Liquidez inmediata',
-        balance: accountBalances.Efectivo,
-        number: '••••  ••••  ••••  CASH',
-        network: 'Disponible',
-        glassTint:
-          'linear-gradient(135deg, rgba(110, 231, 183, 0.56) 0%, rgba(16, 185, 129, 0.72) 50%, rgba(4, 120, 87, 0.84) 100%)',
-        glassBorder: 'rgba(167, 243, 208, 0.72)',
-        glowShadow: '0 18px 36px -10px rgba(16, 185, 129, 0.38)',
-        backPeekBg:
-          'linear-gradient(135deg, rgba(16, 185, 129, 0.85) 0%, rgba(4, 120, 87, 0.92) 100%)',
-      },
-    ];
+    const efectivoCard: DashboardCardItem = {
+      id: 'card-efectivo',
+      name: 'Efectivo',
+      subtitle: 'Liquidez inmediata',
+      balance: accountBalances.Efectivo,
+      number: '••••  ••••  ••••  CASH',
+      network: 'Disponible',
+      glassTint:
+        'linear-gradient(135deg, rgba(110, 231, 183, 0.56) 0%, rgba(16, 185, 129, 0.72) 50%, rgba(4, 120, 87, 0.84) 100%)',
+      glassBorder: 'rgba(167, 243, 208, 0.72)',
+      glowShadow: '0 18px 36px -10px rgba(16, 185, 129, 0.38)',
+      backPeekBg:
+        'linear-gradient(135deg, rgba(16, 185, 129, 0.85) 0%, rgba(4, 120, 87, 0.92) 100%)',
+    };
 
-    const extras: DashboardCardItem[] = customBanks.map((b, i) => ({
-      id: b.id,
-      name: b.name,
-      subtitle: b.kind === 'TC' ? 'Tarjeta Crédito' : 'Tarjeta Débito',
-      balance: b.balance,
-      number: `4152  310${i}  8842  ${1090 + i}`,
-      network: b.kind === 'TC' ? 'Visa' : 'Visa Débito',
-      glassTint: `linear-gradient(135deg, color-mix(in srgb, ${b.color} 52%, rgba(255,255,255,0.65)) 0%, color-mix(in srgb, ${b.color} 76%, transparent) 55%, color-mix(in srgb, ${b.color} 86%, #000000 14%) 100%)`,
-      glassBorder: `color-mix(in srgb, ${b.color} 50%, #ffffff 50%)`,
-      glowShadow: `0 18px 36px -10px color-mix(in srgb, ${b.color} 45%, transparent)`,
-      backPeekBg: `linear-gradient(135deg, ${b.color} 0%, color-mix(in srgb, ${b.color} 80%, #000000 20%) 100%)`,
-    }));
+    const bankCards: DashboardCardItem[] = banks.map((b, i) => {
+      const bal = accountBalances.byAccount[b.id] ?? b.initialBalance;
+      return {
+        id: b.id,
+        name: b.name,
+        subtitle: b.kind === 'TC' ? 'Tarjeta Crédito' : 'Tarjeta Débito',
+        balance: bal,
+        number: `••••  ••••  ••••  ${1000 + i}`,
+        network: b.kind === 'TC' ? 'Crédito' : 'Débito',
+        glassTint: `linear-gradient(135deg, color-mix(in srgb, ${b.color} 52%, rgba(255,255,255,0.65)) 0%, color-mix(in srgb, ${b.color} 76%, transparent) 55%, color-mix(in srgb, ${b.color} 86%, #000000 14%) 100%)`,
+        glassBorder: `color-mix(in srgb, ${b.color} 50%, #ffffff 50%)`,
+        glowShadow: `0 18px 36px -10px color-mix(in srgb, ${b.color} 45%, transparent)`,
+        backPeekBg: `linear-gradient(135deg, ${b.color} 0%, color-mix(in srgb, ${b.color} 80%, #000000 20%) 100%)`,
+      };
+    });
 
-    return [...base, ...extras];
-  }, [accountBalances, customBanks]);
+    return [efectivoCard, ...bankCards];
+  }, [accountBalances, banks]);
 
-  const safeIdx = activeCardIdx % walletCards.length;
-  const currentCard = walletCards[safeIdx];
+  const safeIdx = walletCards.length > 0 ? activeCardIdx % walletCards.length : 0;
+  const currentCard = walletCards[safeIdx] || walletCards[0];
   const nextCard = walletCards[(safeIdx + 1) % walletCards.length];
 
   const handleNextCard = () => {

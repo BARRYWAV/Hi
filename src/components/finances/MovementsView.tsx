@@ -9,7 +9,8 @@ import LiquidSegmentedControl from '@/components/ui/liquid-glass/LiquidSegmented
 import { dayMonth, money } from './format';
 
 export default function MovementsView({ onBack }: { onBack: () => void }) {
-  const { userTransactions, openCaptureSheet, triggerHaptic } = useApp();
+  const { userTransactions, banks, openCaptureSheet, triggerHaptic } = useApp();
+  const accountName = (id: string) => banks.find((b) => b.id === id)?.name ?? id;
   const [filter, setFilter] = useState<'ALL' | 'INCOME' | 'EXPENSE'>('ALL');
 
   const filtered = userTransactions.filter((tx) => {
@@ -26,7 +27,7 @@ export default function MovementsView({ onBack }: { onBack: () => void }) {
         title="Movimientos"
         icon={FileClock}
         onBack={onBack}
-        onAdd={() => openCaptureSheet('finances')}
+        onAdd={() => openCaptureSheet('finances', true, 'transaction')}
         addLabel="Nuevo movimiento"
       />
 
@@ -60,7 +61,7 @@ export default function MovementsView({ onBack }: { onBack: () => void }) {
             </p>
             <button
               type="button"
-              onClick={() => openCaptureSheet('finances')}
+              onClick={() => openCaptureSheet('finances', true, 'transaction')}
               className="mt-1 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--accent-warm)] text-[color:var(--on-accent)] font-bold text-[11px] shadow-sm active:scale-95 transition-transform"
             >
               + Nuevo movimiento
@@ -101,7 +102,7 @@ export default function MovementsView({ onBack }: { onBack: () => void }) {
                       {tx.concept || (isIncome ? 'Ingreso' : 'Gasto')}
                     </p>
                     <p className="text-[10px] text-[var(--mk-muted)] mt-0.5 truncate">
-                      {tx.account || 'Banco'} {tx.category ? `• ${tx.category}` : ''}
+                      {tx.account ? accountName(tx.account) : 'Efectivo'} {tx.category ? `• ${tx.category}` : ''}
                     </p>
                   </div>
                 </div>

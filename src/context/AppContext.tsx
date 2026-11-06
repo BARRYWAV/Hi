@@ -8,6 +8,7 @@ import {
   FinanceTransaction,
   Debt,
   SharedSavingsGoal,
+  BankAccount,
   CalendarEvent,
   Meal,
   WeeklyMealPlanItem,
@@ -29,7 +30,6 @@ import {
 import {
   INITIAL_USERS,
   DEFAULT_USER,
-  INITIAL_SAVINGS_GOAL,
   INITIAL_MEALS,
   INITIAL_WEEKLY_PLAN,
   INITIAL_SUPERMARKET,
@@ -108,13 +108,22 @@ interface AppContextType {
     totalAmount: number;
     type: DebtType;
     notes?: string;
+    dueDate?: string;
   }) => void;
   payDebt: (debtId: string, amount: number, notes?: string) => void;
-  accountBalances: { Nu: number; BBVA: number; Efectivo: number; Total: number };
+  /** Saldos: Efectivo + cada banco (por id) */
+  accountBalances: { Efectivo: number; Total: number; byAccount: Record<string, number> };
 
-  // Shared Savings Goal (100% Shared)
-  savingsGoal: SharedSavingsGoal;
-  addSavingsContribution: (amount: number) => void;
+  // Bancos del usuario
+  banks: BankAccount[];
+  addBank: (b: Omit<BankAccount, 'id'>) => void;
+  removeBank: (id: string) => void;
+
+  // Ahorros (100% Shared)
+  savingsGoals: SharedSavingsGoal[];
+  addSavingsGoal: (g: { name: string; targetAmount: number; targetDate?: string }) => void;
+  removeSavingsGoal: (id: string) => void;
+  addSavingsContribution: (goalId: string, amount: number) => void;
 
   // Calendar (Conditional Privacy)
   calendarEvents: (CalendarEvent & { isRedacted?: boolean })[];
@@ -155,7 +164,13 @@ interface AppContextType {
   isCaptureSheetOpen: boolean;
   captureSheetInitialTab: 'habits' | 'finances' | 'nutrition';
   captureSheetScoped: boolean;
-  openCaptureSheet: (tab?: 'habits' | 'finances' | 'nutrition', scoped?: boolean) => void;
+  /** En modo acotado de Finanzas: muestra solo el formulario de movimiento o el de préstamos */
+  captureFinanceMode: 'transaction' | 'loans' | null;
+  openCaptureSheet: (
+    tab?: 'habits' | 'finances' | 'nutrition',
+    scoped?: boolean,
+    financeMode?: 'transaction' | 'loans'
+  ) => void;
   closeCaptureSheet: () => void;
   isWorkoutPlayerOpen: boolean;
   openWorkoutPlayer: () => void;
@@ -227,13 +242,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [isCaptureSheetOpen, setIsCaptureSheetOpen] = useState(false);
   const [captureSheetInitialTab, setCaptureSheetInitialTab] = useState<'habits' | 'finances' | 'nutrition'>('habits');
   const [captureSheetScoped, setCaptureSheetScoped] = useState(true);
+  const [captureFinanceMode, setCaptureFinanceMode] = useState<'transaction' | 'loans' | null>(null);
   const [isWorkoutPlayerOpen, setIsWorkoutPlayerOpen] = useState(false);
 
   // Entities state
   const [habits, setHabits] = useState<HabitLog[]>(INITIAL_HABITS);
   const [finances, setFinances] = useState<FinanceTransaction[]>(INITIAL_FINANCES);
   const [debts, setDebts] = useState<Debt[]>(INITIAL_DEBTS);
-  const [savingsGoal, setSavingsGoal] = useState<SharedSavingsGoal>(INITIAL_SAVINGS_GOAL);
+  const [savingsGoals, setSavingsGoals] = useState<SharedSavingsGoal[]>([]);
+  const [banks, setBanks] = useState<BankAccount[]>([]);
   const [calendarEventsRaw, setCalendarEventsRaw] = useState<CalendarEvent[]>(INITIAL_CALENDAR_EVENTS);
   const [meals] = useState<Meal[]>(INITIAL_MEALS);
   const [weeklyPlan, setWeeklyPlan] = useState<WeeklyMealPlanItem[]>(INITIAL_WEEKLY_PLAN);
@@ -254,12 +271,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Vaciar automáticamente la información previa para ver el Empty State de nuevo usuario
-      const FRESH_KEY = 'sincro_fresh_empty_v5';
+      const FRESH_KEY = 'sincro_fresh_empty_v6';
       if (!localStorage.getItem(FRESH_KEY)) {
         localStorage.removeItem('sincro_habits');
         localStorage.removeItem('sincro_finances');
         localStorage.removeItem('sincro_debts');
         localStorage.removeItem('sincro_savings');
+        localStorage.removeItem('sincro_savings_goals');
+        localStorage.removeItem('sincro_banks');
         localStorage.removeItem('sincro_calendar');
         localStorage.removeItem('sincro_weekly_plan');
         localStorage.removeItem('sincro_supermarket');
@@ -316,7 +335,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (savedDebts) setDebts(JSON.parse(savedDebts));
 
         const savedSavings = localStorage.getItem('sincro_savings');
-        if (savedSavings) setSavingsGoal(JSON.parse(savedSavings));
+        const savedGoals = localStorage.getItem('sincro_savings_goals');
+        if (savedGoals) {
+          setSavingsGoals(JSON.parse(savedGoals));
+        } else if (savedSavings) {
+          // Migración del formato anterior (una sola meta)
+          const legacy = JSON.parse(savedSavings) as SharedSavingsGoal;
+          if (legacy && legacy.targetAmount > 0) setSavingsGoals([legacy]);
+        }
+        const savedBanks = localStorage.getItem('sincro_banks');
+        if (savedBanks) {
+          const parsed = JSON.parse(savedBanks) as (BankAccount & { balance?: number })[];
+          setBanks(
+            parsed.map((b) => ({
+              ...b,
+              initialBalance: b.initialBalance ?? b.balance ?? 0,
+            }))
+          );
+        }
 
         const savedEvents = localStorage.getItem('sincro_calendar');
         if (savedEvents) setCalendarEventsRaw(JSON.parse(savedEvents));
@@ -596,6 +632,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('sincro_finances');
       localStorage.removeItem('sincro_debts');
       localStorage.removeItem('sincro_savings');
+      localStorage.removeItem('sincro_savings_goals');
+      localStorage.removeItem('sincro_banks');
       localStorage.removeItem('sincro_calendar');
       localStorage.removeItem('sincro_weekly_plan');
       localStorage.removeItem('sincro_supermarket');
@@ -612,7 +650,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setHabits([]);
     setFinances([]);
     setDebts([]);
-    setSavingsGoal(INITIAL_SAVINGS_GOAL);
+    setSavingsGoals([]);
+    setBanks([]);
     setCalendarEventsRaw([]);
     setWeeklyPlan([]);
     setSupermarketList([]);
@@ -648,8 +687,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     saveStorage('sincro_finances', DEMO_FINANCES);
     setDebts(DEMO_DEBTS);
     saveStorage('sincro_debts', DEMO_DEBTS);
-    setSavingsGoal(DEMO_SAVINGS_GOAL);
-    saveStorage('sincro_savings', DEMO_SAVINGS_GOAL);
+    setSavingsGoals([DEMO_SAVINGS_GOAL]);
+    saveStorage('sincro_savings_goals', [DEMO_SAVINGS_GOAL]);
+    const demoBanks: BankAccount[] = [
+      { id: 'Nu', name: 'NU', initialBalance: 12500, kind: 'TD', color: '#8a3ffc' },
+      { id: 'BBVA', name: 'BBVA', initialBalance: 28400, kind: 'TD', color: '#1d6fd1' },
+    ];
+    setBanks(demoBanks);
+    saveStorage('sincro_banks', demoBanks);
     setCalendarEventsRaw(DEMO_CALENDAR_EVENTS);
     saveStorage('sincro_calendar', DEMO_CALENDAR_EVENTS);
     setWeeklyPlan(DEMO_WEEKLY_PLAN);
@@ -803,6 +848,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     totalAmount: number;
     type: DebtType;
     notes?: string;
+    dueDate?: string;
   }) => {
     triggerHaptic(50);
     const newDebt: Debt = {
@@ -815,6 +861,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       status: 'ACTIVE',
       notes: data.notes,
       createdAt: new Date().toISOString(),
+      dueDate: data.dueDate,
       payments: [],
     };
     setDebts((prev) => {
@@ -851,28 +898,77 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const accountBalances = useMemo(() => {
-    const balances = { Nu: 12500, BBVA: 28400, Efectivo: 3200, Total: 0 };
+    // Usuario nuevo: solo Efectivo en $0. Cada banco parte de su saldo inicial.
+    const byAccount: Record<string, number> = { Efectivo: 0 };
+    banks.forEach((b) => {
+      byAccount[b.id] = b.initialBalance;
+    });
     userTransactions.forEach((t) => {
       const multiplier = t.type === 'INCOME' ? 1 : -1;
-      if (t.account in balances) {
-        balances[t.account as keyof typeof balances] += t.amount * multiplier;
-      }
+      if (t.account in byAccount) byAccount[t.account] += t.amount * multiplier;
     });
-    balances.Total = balances.Nu + balances.BBVA + balances.Efectivo;
-    return balances;
-  }, [userTransactions]);
+    const Total = Object.values(byAccount).reduce((acc, v) => acc + v, 0);
+    return { Efectivo: byAccount.Efectivo, Total, byAccount };
+  }, [userTransactions, banks]);
 
   // ----------------------------------------------------
-  // SHARED SAVINGS (100% Compartido)
+  // BANCOS
   // ----------------------------------------------------
-  const addSavingsContribution = (amount: number) => {
-    triggerHaptic([40, 50, 60]);
-    setSavingsGoal((prev) => {
-      const updated = {
+  const addBank = (b: Omit<BankAccount, 'id'>) => {
+    triggerHaptic(30);
+    setBanks((prev) => {
+      const updated = [...prev, { ...b, id: `bank-${Date.now()}` }];
+      saveStorage('sincro_banks', updated);
+      return updated;
+    });
+  };
+
+  const removeBank = (id: string) => {
+    triggerHaptic(20);
+    setBanks((prev) => {
+      const updated = prev.filter((b) => b.id !== id);
+      saveStorage('sincro_banks', updated);
+      return updated;
+    });
+  };
+
+  // ----------------------------------------------------
+  // SHARED SAVINGS (100% Compartido, varias metas)
+  // ----------------------------------------------------
+  const addSavingsGoal = (g: { name: string; targetAmount: number; targetDate?: string }) => {
+    triggerHaptic([30, 40]);
+    setSavingsGoals((prev) => {
+      const updated = [
         ...prev,
-        currentAmount: prev.currentAmount + amount,
-      };
-      saveStorage('sincro_savings', updated);
+        {
+          id: `goal-${Date.now()}`,
+          name: g.name,
+          targetAmount: g.targetAmount,
+          currentAmount: 0,
+          targetDate: g.targetDate || '',
+        },
+      ];
+      saveStorage('sincro_savings_goals', updated);
+      return updated;
+    });
+  };
+
+  const removeSavingsGoal = (id: string) => {
+    triggerHaptic(20);
+    setSavingsGoals((prev) => {
+      const updated = prev.filter((g) => g.id !== id);
+      saveStorage('sincro_savings_goals', updated);
+      return updated;
+    });
+  };
+
+  const addSavingsContribution = (goalId: string, amount: number) => {
+    triggerHaptic([40, 50, 60]);
+    setSavingsGoals((prev) => {
+      const updated = prev.map((g) =>
+        g.id === goalId ? { ...g, currentAmount: g.currentAmount + amount } : g
+      );
+      saveStorage('sincro_savings_goals', updated);
       return updated;
     });
   };
@@ -1123,8 +1219,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Modal openers
-  const openCaptureSheet = (tab: 'habits' | 'finances' | 'nutrition' = 'habits', scoped: boolean = true) => {
+  const openCaptureSheet = (
+    tab: 'habits' | 'finances' | 'nutrition' = 'habits',
+    scoped: boolean = true,
+    financeMode?: 'transaction' | 'loans'
+  ) => {
     setCaptureSheetScoped(scoped);
+    setCaptureFinanceMode(scoped && tab === 'finances' ? financeMode ?? null : null);
     triggerHaptic(35);
     setCaptureSheetInitialTab(tab);
     setIsCaptureSheetOpen(true);
@@ -1349,7 +1450,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         payDebt,
         accountBalances,
 
-        savingsGoal,
+        banks,
+        addBank,
+        removeBank,
+        savingsGoals,
+        addSavingsGoal,
+        removeSavingsGoal,
         addSavingsContribution,
 
         calendarEvents,
@@ -1404,6 +1510,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         isCaptureSheetOpen,
         captureSheetInitialTab,
         captureSheetScoped,
+        captureFinanceMode,
         openCaptureSheet,
         closeCaptureSheet,
         isWorkoutPlayerOpen,

@@ -25,6 +25,7 @@ import confetti from 'canvas-confetti';
 import { AccountType, TransactionType, DebtType } from '@/types';
 import LiquidGlassSheet from '@/components/ui/LiquidGlassSheet';
 import LiquidSegmentedControl from '@/components/ui/liquid-glass/LiquidSegmentedControl';
+import { isoDateInDays } from '@/components/finances/format';
 
 export default function QuickCaptureSheet() {
   const {
@@ -32,6 +33,8 @@ export default function QuickCaptureSheet() {
     closeCaptureSheet,
     captureSheetInitialTab,
     captureSheetScoped,
+    captureFinanceMode,
+    banks,
     todayHabit,
     incrementPoop,
     addWater,
@@ -46,18 +49,11 @@ export default function QuickCaptureSheet() {
 
   const [activeTab, setActiveTab] = useState<'habits' | 'finances' | 'nutrition'>(captureSheetInitialTab);
 
-  // Sincronizar tab inicial cuando se abre el modal
-  useEffect(() => {
-    if (isCaptureSheetOpen) {
-      setActiveTab(captureSheetInitialTab);
-    }
-  }, [isCaptureSheetOpen, captureSheetInitialTab]);
-
   // Tab Finanzas
   const [financeSubTab, setFinanceSubTab] = useState<'transaction' | 'loans'>('transaction');
   const [txType, setTxType] = useState<TransactionType>('EXPENSE');
   const [amountStr, setAmountStr] = useState<string>('');
-  const [selectedAccount, setSelectedAccount] = useState<AccountType>('Nu');
+  const [selectedAccount, setSelectedAccount] = useState<AccountType>('Efectivo');
   const [concept, setConcept] = useState('');
 
   // Préstamos sub-state
@@ -65,8 +61,20 @@ export default function QuickCaptureSheet() {
   const [loanContact, setLoanContact] = useState('');
   const [loanAmountStr, setLoanAmountStr] = useState('');
   const [loanType, setLoanType] = useState<DebtType>('THEY_OWE');
+  const [loanDueDate, setLoanDueDate] = useState<string>(isoDateInDays(7));
   const [selectedDebtId, setSelectedDebtId] = useState<string>('');
   const [payAmountStr, setPayAmountStr] = useState('');
+
+  // Sincronizar tab inicial cuando se abre el modal
+  useEffect(() => {
+    if (isCaptureSheetOpen) {
+      setActiveTab(captureSheetInitialTab);
+      if (captureFinanceMode) setFinanceSubTab(captureFinanceMode);
+      // Si la cuenta seleccionada ya no existe, volver a Efectivo
+      setSelectedAccount((acc) => (acc === 'Efectivo' || banks.some((b) => b.id === acc) ? acc : 'Efectivo'));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCaptureSheetOpen, captureSheetInitialTab, captureFinanceMode]);
 
   // Tab Nutrición
   const [nutritionPrompt, setNutritionPrompt] = useState('');
@@ -117,8 +125,10 @@ export default function QuickCaptureSheet() {
       contactName: loanContact.trim(),
       totalAmount: amount,
       type: loanType,
+      dueDate: loanDueDate ? new Date(`${loanDueDate}T12:00:00`).toISOString() : undefined,
     });
     setLoanContact('');
+    setLoanDueDate(isoDateInDays(7));
     setLoanAmountStr('');
     closeCaptureSheet();
   };
@@ -206,7 +216,11 @@ export default function QuickCaptureSheet() {
           <h2 className="text-sm font-extrabold text-[var(--mk-ink)] dark:text-white tracking-tight">
             {captureSheetScoped
               ? activeTab === 'finances'
-                ? 'Finanzas'
+                ? captureFinanceMode === 'loans'
+                  ? 'Préstamos'
+                  : captureFinanceMode === 'transaction'
+                  ? 'Nuevo movimiento'
+                  : 'Finanzas'
                 : activeTab === 'nutrition'
                 ? 'Nutrición'
                 : 'Hábitos'
@@ -375,7 +389,8 @@ export default function QuickCaptureSheet() {
         {/* ========================================================= */}
         {activeTab === 'finances' && (
           <div className="space-y-2">
-            {/* Sub-pestañas Glisse: Movimiento vs Préstamos */}
+            {/* Sub-pestañas Glisse: Movimiento vs Préstamos (ocultas si se abrió desde Préstamos o Movimientos) */}
+            {!captureFinanceMode && (
             <LiquidSegmentedControl<'transaction' | 'loans'>
               size="sm"
               value={financeSubTab}
@@ -388,6 +403,7 @@ export default function QuickCaptureSheet() {
                 { id: 'loans', label: 'Préstamos' },
               ]}
             />
+            )}
 
             {financeSubTab === 'transaction' ? (
               <>
@@ -421,20 +437,53 @@ export default function QuickCaptureSheet() {
                   </div>
                 </div>
 
-                {/* Selector de Cuenta Glisse: [Nu] [BBVA] [Efectivo] */}
-                <LiquidSegmentedControl<AccountType>
-                  size="sm"
-                  value={selectedAccount}
-                  onChange={(acc) => {
-                    triggerHaptic(15);
-                    setSelectedAccount(acc);
-                  }}
-                  options={[
-                    { id: 'Nu', label: 'Nu', icon: <CreditCard className="w-3 h-3" /> },
-                    { id: 'BBVA', label: 'BBVA', icon: <CreditCard className="w-3 h-3" /> },
-                    { id: 'Efectivo', label: 'Efectivo', icon: <Banknote className="w-3 h-3" /> },
-                  ]}
-                />
+                {/* Selector de cuenta: Efectivo + bancos que el usuario haya agregado */}
+                {banks.length === 0 ? (
+                  <div className="h-8 px-3 rounded-xl bg-black/[0.03] dark:bg-white/[0.04] border border-black/8 dark:border-white/10 flex items-center justify-center gap-1.5 text-[11px] font-bold text-[var(--mk-ink)]">
+                    <Banknote className="w-3.5 h-3.5 text-[color:var(--accent-warm)]" /> Efectivo
+                  </div>
+                ) : banks.length <= 2 ? (
+                  <LiquidSegmentedControl<AccountType>
+                    size="sm"
+                    value={selectedAccount}
+                    onChange={(acc) => {
+                      triggerHaptic(15);
+                      setSelectedAccount(acc);
+                    }}
+                    options={[
+                      { id: 'Efectivo', label: 'Efectivo', icon: <Banknote className="w-3 h-3" /> },
+                      ...banks.map((b) => ({ id: b.id, label: b.name, icon: <CreditCard className="w-3 h-3" /> })),
+                    ]}
+                  />
+                ) : (
+                  <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
+                    {[{ id: 'Efectivo', name: 'Efectivo', color: '' }, ...banks].map((b) => {
+                      const on = selectedAccount === b.id;
+                      return (
+                        <button
+                          key={b.id}
+                          type="button"
+                          onClick={() => {
+                            triggerHaptic(15);
+                            setSelectedAccount(b.id);
+                          }}
+                          className={`h-8 px-3 rounded-full shrink-0 flex items-center gap-1.5 text-[11px] font-bold border transition-all ${
+                            on
+                              ? 'bg-[var(--accent-warm)] text-[color:var(--on-accent)] border-transparent'
+                              : 'bg-black/[0.03] dark:bg-white/[0.04] border-black/8 dark:border-white/10 text-[var(--mk-ink)]'
+                          }`}
+                        >
+                          {b.id === 'Efectivo' ? (
+                            <Banknote className="w-3 h-3" />
+                          ) : (
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: b.color }} />
+                          )}
+                          {b.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {/* Campo de Concepto compacto */}
                 <input
@@ -512,6 +561,18 @@ export default function QuickCaptureSheet() {
                           value={loanAmountStr}
                           onChange={(e) => setLoanAmountStr(e.target.value)}
                           placeholder="1500"
+                          className="w-full h-9 px-3 rounded-xl bg-black/[0.03] dark:bg-white/[0.04] border border-black/8 dark:border-white/10 text-xs text-[var(--mk-ink)] dark:text-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-extrabold text-neutral-400 mb-1 block uppercase tracking-wider">
+                          Fecha límite de pago
+                        </label>
+                        <input
+                          type="date"
+                          value={loanDueDate}
+                          min={isoDateInDays(0)}
+                          onChange={(e) => setLoanDueDate(e.target.value)}
                           className="w-full h-9 px-3 rounded-xl bg-black/[0.03] dark:bg-white/[0.04] border border-black/8 dark:border-white/10 text-xs text-[var(--mk-ink)] dark:text-white"
                         />
                       </div>
