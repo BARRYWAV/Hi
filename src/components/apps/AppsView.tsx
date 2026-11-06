@@ -75,7 +75,7 @@ export default function AppsView({ initialApp = null }: AppsViewProps) {
 
   // Vista principal: Bento Mosaico con Liquid Glass (.mk-card .mk-select-card) e iconos de Lucide
   return (
-    <div className="space-y-3.5 pb-24 max-w-xl mx-auto pt-11 sm:pt-14">
+    <div className="space-y-3.5 pb-24 max-w-xl mx-auto pt-16 sm:pt-20 mt-4">
       {/* ========================================================= */}
       {/* TARJETA 1 (Superior, ancha): FINANZAS                     */}
       {/* ========================================================= */}
